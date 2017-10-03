@@ -10,9 +10,9 @@ entity CPU is
 end entity CPU;
 
 architecture ATMEGA_CPU of CPU is
-	constant progmem_size : integer := 12; --4 kb
-	constant datamem_size : integer := 16; --64 kb
-	constant gpreg_size : integer := 6; --32 bytes
+	constant PROGMEM_SIZE : integer := 12; --4 kb
+	constant DATAMEM_SIZE : integer := 16; --64 kb
+	--constant gpreg_size : integer := 6; --32 bytes
 	
 	component mem
 		generic (RamWidth : integer := 8;
@@ -30,30 +30,46 @@ architecture ATMEGA_CPU of CPU is
 	signal clock	: std_logic;
 	
 	signal p_wr		: std_logic;
-	signal p_addr	: std_logic_vector(progmem_size-1 downto 0);
+	signal p_addr	: std_logic_vector(PROGMEM_SIZE-1 downto 0);
 	signal p_dw		: std_logic_vector(15 downto 0);
 	signal p_dr		: std_logic_vector(15 downto 0);
 	
 	signal d_wr		: std_logic;
-	signal d_addr	: std_logic_vector(datamem_size-1 downto 0);
+	signal d_addr	: std_logic_vector(DATAMEM_SIZE-1 downto 0);
 	signal d_dw		: std_logic_vector(7 downto 0);
 	signal d_dr		: std_logic_vector(7 downto 0);
 	
-	signal r_wr		: std_logic;
-	signal r_addr	: std_logic_vector(gpreg_size-1 downto 0);
-	signal r_dw		: std_logic_vector(7 downto 0);
-	signal r_dr		: std_logic_vector(7 downto 0);
+	--signal r_wr		: std_logic;
+	--signal r_addr	: std_logic_vector(gpreg_size-1 downto 0);
+	--signal r_dw		: std_logic_vector(7 downto 0);
+	--signal r_dr		: std_logic_vector(7 downto 0);
 	
+	signal prog_counter : std_logic_vector(PROGMEM_SIZE-1 downto 0);
+	type cpu_states is (FETCH, DECODE, EXECUTE, HALT);
+	signal state: cpu_states := FETCH;
+	
+	signal i_decode : std_logic;
 begin
 	
-	prog_mem : mem generic map (AddrWidth => progmem_size, RamWidth => 16) port map (clock, p_wr, p_addr, p_dw, p_dr);
-	data_mem : mem generic map (AddrWidth => datamem_size) port map (clock, d_wr, d_addr, d_dw, d_dr);
-	gpreg : mem generic map (AddrWidth => gpreg_size) port map (clock, r_wr, r_addr, r_dw, r_dr);
+	prog_mem : mem generic map (AddrWidth => PROGMEM_SIZE, RamWidth => 16) port map (clock, p_wr, p_addr, p_dw, p_dr);
+	data_mem : mem generic map (AddrWidth => DATAMEM_SIZE) port map (clock, d_wr, d_addr, d_dw, d_dr);
+	--gpreg : mem generic map (AddrWidth => gpreg_size) port map (clock, r_wr, r_addr, r_dw, r_dr);
 	
-	run_cpu: process(CLK)
+	cpu_state_machine: process(CLK)
 	begin
-		clock <= CLK;
-	end process run_cpu;
+		if rising_edge(CLK) then
+			case state is
+				when FETCH => 
+					state <= DECODE;
+				when DECODE => 
+					state <= EXECUTE;
+				when EXECUTE => 
+					state <= FETCH;
+				when HALT => NULL;
+			end case;
+		end if;
+	end process cpu_state_machine;
 	
+	i_decode <= '1' when state = DECODE else '0';
 
 end architecture ATMEGA_CPU;
