@@ -1,23 +1,17 @@
-Add	  - 000001
-16bit Add - 000010
-Sub - 000011
-16 bit - 000100
-And - 000101
-OR - 000110
-XOR - 000111
-1's Comp - 001000
-2's comp - 001001
-set bit in reg? - 001010
-clear bit in reg? - 001011
-increment - 001100
-decrement - 001101
-Test - 001110
-clear reg? - 001111
-set reg? - 010000
-multiply signed - 010001
-multiply unsigned - 010010
-multiply signed unsigned - 010011
-fractional multiply unsigned - 010100
-fractional multiply signed - 010101
-fractional multiply signed with unsigned - 010110
-data encryption - 010111
+Add	  - 00001
+16bit Add - 00010
+Sub - 00011
+16 bit - 00100
+
+And - 00101
+OR - 00110
+XOR - 00111
+1's Comp - 01000
+2's comp - 01001
+
+multiply unsigned - 01010
+multiply signed - 01011
+multiply signed unsigned - 01100
+fractional multiply unsigned - 01101
+fractional multiply signed - 01110
+fractional multiply signed with unsigned - 01111
