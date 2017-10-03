@@ -1,0 +1,1 @@
+[1003/131221:INFO:CONSOLE(192)] "Uncaught TypeError: Cannot read property 'addEventListener' of undefined", source: http://tur-bcrep2.massey.ac.nz/exceptions/js_minify_core.js (192)
