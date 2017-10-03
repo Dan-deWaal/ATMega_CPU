@@ -15,3 +15,9 @@ multiply signed unsigned - 01100
 fractional multiply unsigned - 01101
 fractional multiply signed - 01110
 fractional multiply signed with unsigned - 01111
+
+SLL - 10000
+SLR - 10001
+ROL - 10010
+ROR - 10011
+SAR - 10100
