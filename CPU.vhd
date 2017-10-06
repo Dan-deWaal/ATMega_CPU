@@ -95,11 +95,21 @@ begin
 		end if;
 	end process cpu_state_machine;
 	
-	fetch: process(CLK)
+	cpu_run: process(state, CLK)
 	begin
-		if rising_edge(CLK) then
-			instruction <= p_dr;
-		end if;
+	if rising_edge(CLK) then
+		case state is
+				when FETCHSTATE => 
+					--new instruction is available at p_dr at the end of this clock cycle.
+					NULL;
+				when DECODESTATE => 
+					
+				when EXECUTESTATE => 
+				
+				when HALTSTATE => 
+					NULL;
+			end case;
+	end if;
 	end process fetch;
 	
 	i_decode <= '1' when state = DECODESTATE else '0';
