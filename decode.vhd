@@ -14,7 +14,6 @@ entity decode is
 			  post_dec: out std_LOGIC;			--   +
 			  status  : out std_LOGIC_VECTOR(7 downto 0);  --s
 			  bits: out std_LOGIC_VECTOR(2 downto 0);		  --b
-			  Any_value: out std_LOGIC_VECTOR(7 downto 0);	--x  #39
            opcode : out  STD_LOGIC_VECTOR (7 downto 0));
 end decode;
  
@@ -165,12 +164,12 @@ begin
 				when "10-0--1-----0---" =>			
 					Rr <= i_dataInst(8 downto 4);
 					offset<= i_dataInst(2 downto 0) & i_dataInst(11 downto 10) & i_dataInst(13);
-					opcode <=std_LOGIC_VECTOR(to_unsigned(28,8));	--28.STD Z+q,Rr (Wrong, r replace d)
+					opcode <=std_LOGIC_VECTOR(to_unsigned(28,8));	--28.STD Z+q,Rr 
 					
 				when "10-0--1-----1---" =>
 					Rr <= i_dataInst(8 downto 4);
 					offset<= i_dataInst(2 downto 0) & i_dataInst(11 downto 10) & i_dataInst(13);
-					opcode <=std_LOGIC_VECTOR(to_unsigned(29,8));	--29.STD Y (wrong) 
+					opcode <=std_LOGIC_VECTOR(to_unsigned(29,8));	--29.STD Y 
 					
 				when "1001000-----0000" =>
 					Rd <= i_dataInst(8 downto 4);
@@ -210,7 +209,7 @@ begin
 					
 				when "1001001-----0000" =>
 					Rd <= i_dataInst(8 downto 4);
-					opcode <=std_LOGIC_VECTOR(to_unsigned(37,8));	--37.STS *(Wrong d replace r)
+					opcode <=std_LOGIC_VECTOR(to_unsigned(37,8));	--37.STS *
 					
 				when "1001001-----00--" =>
 					Rr <= i_dataInst(8 downto 4);
@@ -218,10 +217,9 @@ begin
 					post_dec<= i_dataInst(0);		--  +
 					opcode <=std_LOGIC_VECTOR(to_unsigned(38,8));	--38.ST -z+
 					
-				when "1001001-----01--" =>
-					Rr <= i_dataInst(8 downto 4);
-					Any_value<= i_dataInst(1 downto 0);		
-					opcode <=std_LOGIC_VECTOR(to_unsigned(39,8));	--39. ??? XCH,LAC,LAS,LAT
+				when "000111----------" =>
+					Rd <= i_dataInst(4 downto 0);		
+					opcode <=std_LOGIC_VECTOR(to_unsigned(39,8));	--39. ROL
 					
 				when "1001001-----10--" =>
 					Rr <= i_dataInst(8 downto 4);
@@ -255,9 +253,9 @@ begin
 					Rd <= i_dataInst(8 downto 4);
 					opcode <=std_LOGIC_VECTOR(to_unsigned(46,8));	--46.INC
 					
-				when "1001010-----0100" =>
-					Rd <= i_dataInst(8 downto 4);
-					opcode <=std_LOGIC_VECTOR(to_unsigned(47,8));	--47.??? (Wrong,no command)
+				when "000011----------" =>
+					Rd <= i_dataInst(4 downto 0);		
+					opcode <=std_LOGIC_VECTOR(to_unsigned(47,8));	--47.LSL
 					
 				when "1001010-----0101" =>
 					Rd <= i_dataInst(8 downto 4);
@@ -319,8 +317,9 @@ begin
 				when "1001010111101000" =>
 					opcode <=std_LOGIC_VECTOR(to_unsigned(65,8));	--65.SPM
 					
-				when "1001010111111000" =>
-					opcode <=std_LOGIC_VECTOR(to_unsigned(66,8));	--66.ESPM (No command)
+				when "001000----------" =>
+					Rd <= i_dataInst(4 downto 0);		
+					opcode <=std_LOGIC_VECTOR(to_unsigned(66,8));	--66.TST
 					
 				when "1001010-----110-" =>
 					imm <= i_dataInst(8 downto 4) & i_dataInst(0);
@@ -417,6 +416,22 @@ begin
 					Rr <= i_dataInst(8 downto 4);
 					bits <= i_dataInst(2 downto 0); 
 					opcode <=std_LOGIC_VECTOR(to_unsigned(86,8));	--86.SBRS
+				
+				when "1001001-----0010" =>
+					Rr <= i_dataInst(8 downto 4); 
+					opcode <=std_LOGIC_VECTOR(to_unsigned(87,8));	--87.LAC
+					
+				when "1001001-----0100" =>
+					Rr <= i_dataInst(8 downto 4); 
+					opcode <=std_LOGIC_VECTOR(to_unsigned(88,8));	--88.XCH
+					
+				when "1001001-----0101" =>
+					Rr <= i_dataInst(8 downto 4); 
+					opcode <=std_LOGIC_VECTOR(to_unsigned(89,8));	--89.LAS
+				
+				when "1001001-----0111" =>
+					Rr <= i_dataInst(8 downto 4); 
+					opcode <=std_LOGIC_VECTOR(to_unsigned(90,8));	--90.LAT
 				
 				when others  => opcode <= (others => '0');
        

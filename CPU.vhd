@@ -12,7 +12,6 @@ end entity CPU;
 architecture ATMEGA_CPU of CPU is
 	constant PROGMEM_SIZE : integer := 12; --4 kb
 	constant DATAMEM_SIZE : integer := 16; --64 kb
-	--constant gpreg_size : integer := 6; --32 bytes
 	
 	component mem
 		generic (RamWidth : integer := 8;
@@ -23,7 +22,23 @@ architecture ATMEGA_CPU of CPU is
 			addr	: in std_logic_vector(AddrWidth-1 downto 0);
 			dw		: in std_logic_vector(RamWidth-1 downto 0);
 			dr		: out std_logic_vector(RamWidth-1 downto 0) );
-	end component;					
+	end component;	
+
+	component decode
+		port(
+			clock : in  STD_LOGIC;
+			I_dataInst : in  STD_LOGIC_VECTOR (15 downto 0);
+			I_en : in  STD_LOGIC;
+			Rd : out  STD_LOGIC_VECTOR (4 downto 0);
+			Rr : out  STD_LOGIC_VECTOR (4 downto 0);
+			Offset : out  STD_LOGIC_VECTOR (7 downto 0);
+			imm : out  STD_LOGIC_VECTOR (15 downto 0);
+			pre_dec: out std_LOGIC;
+			post_dec: out std_LOGIC;
+			status  : out std_LOGIC_VECTOR(7 downto 0);
+			bits: out std_LOGIC_VECTOR(2 downto 0);
+			opcode : out  STD_LOGIC_VECTOR (7 downto 0) );
+	end component;
 	
 	signal PA_IO 	: std_logic_vector(7 downto 0);
 	
@@ -38,38 +53,55 @@ architecture ATMEGA_CPU of CPU is
 	signal d_addr	: std_logic_vector(DATAMEM_SIZE-1 downto 0);
 	signal d_dw		: std_logic_vector(7 downto 0);
 	signal d_dr		: std_logic_vector(7 downto 0);
-	
-	--signal r_wr		: std_logic;
-	--signal r_addr	: std_logic_vector(gpreg_size-1 downto 0);
-	--signal r_dw		: std_logic_vector(7 downto 0);
-	--signal r_dr		: std_logic_vector(7 downto 0);
+		
+	type reg is array (0 to 31) of std_logic_vector(7 downto 0);
+	signal registers	: reg;
+	signal instruction: std_logic_vector(15 downto 0);
+	signal Rd			: std_logic_vector(4 downto 0);
+	signal Rr			: std_logic_vector(4 downto 0);
+	signal offset		: std_logic_vector(7 downto 0);
+	signal imm			: std_logic_vector(15 downto 0);
+	signal pre_dec		: std_logic;
+	signal post_dec	: std_logic;
+	signal status		: std_logic_vector(7 downto 0);
+	signal bits			: std_logic_vector(2 downto 0);
+	signal opcode		: std_logic_vector(7 downto 0);
+	signal alucontrol : std_logic_vector(4 downto 0);
 	
 	signal prog_counter : std_logic_vector(PROGMEM_SIZE-1 downto 0);
-	type cpu_states is (FETCH, DECODE, EXECUTE, HALT);
-	signal state: cpu_states := FETCH;
+	type cpu_states is (FETCHSTATE, DECODESTATE, EXECUTESTATE, HALTSTATE);
+	signal state: cpu_states := FETCHSTATE;
 	
 	signal i_decode : std_logic;
 begin
-	
+	-- Create components
 	prog_mem : mem generic map (AddrWidth => PROGMEM_SIZE, RamWidth => 16) port map (clock, p_wr, p_addr, p_dw, p_dr);
 	data_mem : mem generic map (AddrWidth => DATAMEM_SIZE) port map (clock, d_wr, d_addr, d_dw, d_dr);
-	--gpreg : mem generic map (AddrWidth => gpreg_size) port map (clock, r_wr, r_addr, r_dw, r_dr);
+	decoder : decode port map (clock, p_dr, i_decode, Rd, Rr, offset, imm, pre_dec, post_dec, status, bits, opcode);
 	
 	cpu_state_machine: process(CLK)
 	begin
 		if rising_edge(CLK) then
 			case state is
-				when FETCH => 
-					state <= DECODE;
-				when DECODE => 
-					state <= EXECUTE;
-				when EXECUTE => 
-					state <= FETCH;
-				when HALT => NULL;
+				when FETCHSTATE => 
+					state <= DECODESTATE;
+				when DECODESTATE => 
+					state <= EXECUTESTATE;
+				when EXECUTESTATE => 
+					state <= FETCHSTATE;
+				when HALTSTATE => 
+					NULL;
 			end case;
 		end if;
 	end process cpu_state_machine;
 	
-	i_decode <= '1' when state = DECODE else '0';
+	fetch: process(CLK)
+	begin
+		if rising_edge(CLK) then
+			instruction <= p_dr;
+		end if;
+	end process fetch;
+	
+	i_decode <= '1' when state = DECODESTATE else '0';
 
 end architecture ATMEGA_CPU;
