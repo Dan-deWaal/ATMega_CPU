@@ -3,91 +3,72 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 entity alu is
-	port (
-		CONTROL: in std_logic_vector(7 downto 0);
-		X: in signed(15 downto 0);
-		Y: in signed(7 downto 0);
-		OUTPUT: out signed (15 downto 0);
-		STATUS: out std_logic_vector(8 downto 0)
-	);
+    port (
+        CONTROL: in std_logic_vector(7 downto 0);
+        X: in signed(15 downto 0);
+        Y: in signed(7 downto 0);
+        OUTPUT: out signed (15 downto 0);
+        STATUS: out std_logic_vector(8 downto 0)
+    );
 end entity alu;
 
 architecture alu_arch of alu is
-	signal sum : signed(15 downto 0);
-	signal sub : signed(15 downto 0);
-	signal logic_and : signed(7 downto 0);
-	signal negative : std_logic;
-	signal overflow : std_logic;
+    constant ADD_OP : std_logic_vector(4 downto 0) := "00001"; 
+    constant ADD16_OP : std_logic_vector(4 downto 0) := "00010"; 
+    constant SUB_OP : std_logic_vector(4 downto 0) := "00011"; 
+    constant SUB16_OP : std_logic_vector(4 downto 0) := "00100"; 
+
+    constant AND_OP : std_logic_vector(4 downto 0) := "00101"; 
+    constant OR_OP : std_logic_vector(4 downto 0) := "00110"; 
+    constant XOR_OP : std_logic_vector(4 downto 0) := "00111"; 
+    constant NOT_OP : std_logic_vector(4 downto 0) := "01000"; 
+    constant NEG_OP : std_logic_vector(4 downto 0) := "01001"; 
+
+    constant MULU_OP : std_logic_vector(4 downto 0) := "01010"; 
+    constant MULS_OP : std_logic_vector(4 downto 0) := "01011"; 
+    constant MULSU_OP : std_logic_vector(4 downto 0) := "01100"; 
+    constant FMULU_OP : std_logic_vector(4 downto 0) := "01101"; 
+    constant FMULS_OP : std_logic_vector(4 downto 0) := "01110"; 
+    constant FMULSU_OP : std_logic_vector(4 downto 0) := "01111"; 
+
+    constant LSL_OP : std_logic_vector(4 downto 0) := "10000"; 
+    constant LSR_OP : std_logic_vector(4 downto 0) := "10001"; 
+    constant ASR_OP : std_logic_vector(4 downto 0) := "10010"; 
+    constant ROTL_OP : std_logic_vector(4 downto 0) := "10011"; 
+    constant ROTR_OP : std_logic_vector(4 downto 0) := "10100"; 
+
+    signal carry_in : std_logic;
+
+    signal result : signed(15 downto 0);
+    signal y_copy : signed (7 downto 0);
+    signal negative : std_logic;
+    signal overflow : std_logic;
 begin
-	-- opcode ADD == 000001
-	-- opcode 16 bit ADD == 000010
-	sum <= X + ("00000000" & Y);
-	-- opcode SUB == 000011
-	-- opcode 16 bit SUB == 000100
-	sub <= X - ("00000000" & Y);
-	-- opcode AND == 000101
+    X(15 downto 8) <= X(15 downto 8) when CONTROL = ADD16_OP or CONTROL = SUB16_OP else
+                      (others <= '0');
 
-	-- opcode COM == 001000
-	
-	with CONTROL(5 downto 0) select
-		STATUS(0) <= (X(7) and Y(7)) or (Y(7) and not sum(7)) or (not sum(7) and X(7)) when "000001",
-					 not sum(15) and X(15) when "000010",
-					 (not X(7) and Y(7)) or (Y(7) and sub(7)) or (sub(7) and not X(7)) when "000011",
-					 sub(15) and not X(15) when "000100",
-					 '1' when "001000",
-					 '-' when others;
-					 
-	-- zero
-	with CONTROL(5 downto 0) select
-		STATUS(1) <= not sum(7) and not sum(6) and not sum(5) and not sum(4) and not sum(3) and not sum(2) and not sum(1) and not sum(0) when "000001",
-					 not sum(15) and not sum(14) and not sum(13) and not sum(12) and not sum(11) and not sum(10) and not sum(9) and not sum(8) and not sum(7) and not sum(6) and not sum(5) and not sum(4) and not sum(3) and not sum(2) and not sum(1) and not sum(0) when "000010",
-					 not sub(7) and not sub(6) and not sub(5) and not sub(4) and not sub(3) and not sub(2) and not sub(1) and not sub(0) when "000011",
-					 not sub(15) and not sub(14) and not sub(13) and not sub(12) and not sub(11) and not sub(10) and not sub(9) and not sub(8) and not sub(7) and not sub(6) and not sub(5) and not sub(4) and not sub(3) and not sub(2) and not sub(1) and not sub(0) when "000100",
-					 X(7) or X(6) or X(5) or X(4) or X(3) or X(2) or X(1) or X(0) when "001000",
-					 '-' when others;
-					 
-	-- negative
-	with CONTROL(5 downto 0) select
-		negative <= sum(7) when "000001",
-					sum(15) when "000010",
-					sub(7) when "000011",
-					sub(15) when "000100",
-					not X(7) when "001000",
-					'-' when others;
-	STATUS(2) <= negative;
+    X(7 downto 0) <= (others <= '0') when CONTROL = NEG_OP else;
+                     X(7 downto 0);
 
-	-- overflow
-	with CONTROL(5 downto 0) select
-		overflow <= (X(7) and Y(7) and not sum(7)) or (not X(7) and not Y(7) and sum(7)) when "000001",
-					sum(15) and not X(15) when "000010",
-					(X(7) and not Y(7) and not sub(7)) or (not X(7) and Y(7) and sub(7)) when "000011",
-					sub(15) and not X(15) when "000100",
-					'0' when "001000",
-					'-' when others;
-	STATUS(3) <= overflow;
+    y_copy <= not Y when CONTROL = SUB_OP or CONTROL = SUB16_OP else
+              not X when CONTROL = NEG_OP else
+              Y;
 
-	-- signed
-	with CONTROL(5 downto 0) select
-		STATUS(4) <= negative xor overflow when "000001",
-					 negative xor overflow when "000010",
-					 negative xor overflow when "000011",
-					 negative xor overflow when "000100",
-					 negative xor overflow when "001000",
-					 '-' when others;
-					 
-	-- half carry
-	with CONTROL(5 downto 0) select
-		STATUS(5) <= (X(3) and Y(3)) or (Y(3) and not sum(3)) or (not sum(3) and X(3)) when "000001",
-					 (not X(3) and Y(3)) or (Y(3) and sub(3)) or (sub(3) and not X(3)) when "000011",
-					 '-' when others;
-					 
-	-- result
-	with CONTROL(5 downto 0) select
-		OUTPUT <= resize(sum, 16) when "000001",
-				  sum when "000010",
-				  resize(sub, 16) when "000011",
-				  sub when "000100",
-				  not X when "001000",
-				  (others => '0') when others;
+    carry_in <= '1' when CONTROL = SUB_OP or CONTROL = SUB16_OP or CONTROL = NEG_OP else
+                '0';
+
+    with CONTROL(4 downto 0) select
+        result(7 downto 0) <= X + ("00000000" & y_copy) + signed("0" & carry_in, 16) when ADD_OP,
+                  X + ("00000000" & y_copy) + signed("0" & carry_in, 16) when ADD16_OP,
+                  X + ("00000000" & y_copy) + signed("0" & carry_in, 16) when SUB_OP,
+                  X + ("00000000" & y_copy) + signed("0" & carry_in, 16) when SUB16_OP,
+                  "00000000" & (X(7 downto 0) and Y) when AND_OP,
+                  "00000000" & (X(7 downto 0) or Y) when OR_OP,
+                  "00000000" & (X(7 downto 0) xor Y) when XOR_OP,
+                  "00000000" & (not X(7 downto 0)) when NOT_OP,
+                  X + ("00000000" & y_copy) + signed("0" & carry_in, 16) when NEG_OP,
+                  unsigned(X(7 downto 0), 8) * unsigned(Y, 8) when MULU_OP,
+                  X(7 downto 0) * Y, 8 when MULS_OP,
+                  X(7 downto 0) * Y, 8 when MULS_OP,
 
 end architecture alu_arch;
