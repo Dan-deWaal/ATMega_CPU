@@ -110,7 +110,7 @@ begin
 					NULL;
 			end case;
 	end if;
-	end process fetch;
+	end process cpu_run;
 	
 	i_decode <= '1' when state = DECODESTATE else '0';
 

@@ -87,8 +87,8 @@ begin
                   "00000000" & (X(7 downto 0) sll 1) when LSL_OP, 
                   "00000000" & (X(7 downto 0) srl 1) when LSR_OP,
                   "00000000" & shift_right(X(7 downto 0), 1) when ASR_OP,
-                  "0000000" & (X(7 downto 0) rol 1) & STATUS_IN(0) when ROTL_OP, 
-                  "00000000" & STATUS_IN(0) & (X(7 downto 1) ror 1) when ROTR_OP, 
+                  "00000000" & X(6 downto 0) & STATUS_IN(0) when ROTL_OP, 
+                  "00000000" & STATUS_IN(0) & X(7 downto 1) when ROTR_OP, 
                   (others => '0') when others;
 	
 --    result(0) <= STATUS_IN(0) when control = ROTL_OP 
