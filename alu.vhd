@@ -9,7 +9,7 @@ entity alu is
         Y: in signed(7 downto 0);
         STATUS_IN: in std_logic_vector(7 downto 0);
         OUTPUT: out signed (15 downto 0);
-        STATUS_OUT: out std_logic_vector(8 downto 0)
+        STATUS_OUT: out std_logic_vector(7 downto 0)
     );
 end entity alu;
 
