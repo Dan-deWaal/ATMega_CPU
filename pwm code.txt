@@ -1,0 +1,88 @@
+.org $0000
+rjmp _main
+.org $0020
+_port_init:
+
+clr R2; PORTB = 0x00;
+out 0x5,R2
+
+ldi R24,6; DDRB = 0x06;
+out 0x4,R24
+
+out 0x8,R2; PORTC = 0x00;
+
+out 0x7,R2; DDRC = 0x00;
+
+out 0xb,R2; PORTD = 0x00;
+
+out 0xa,R2; DDRD = 0x00;
+ret
+_timer1_init:
+
+clr R2; TCCR1B = 0x00; //stop
+sts 129,R2
+
+ldi R24,252; TCNT1H = 0xFC; //setup
+sts 133,R24
+
+ldi R24,1; TCNT1L = 0x01;
+sts 132,R24
+
+ldi R24,227; TCCR1A = 0xE3;
+sts 128,R24
+
+ldi R24,3; TCCR1B = 0x03; //start Timer
+sts 129,R24
+ret
+_adc_init:
+
+clr R2; turn off ADC
+sts 122,R2
+
+ldi R24,64; select AVCC as standard
+sts 124,R24
+
+ldi R24,128; turn off analog comparator
+out 0x30,R24
+
+ldi R24,198; enable ADC single conversion£¬select 64 frequency division
+sts 122,R24
+ret
+_adc_get:
+
+lds R24,122; turn on ADC
+ori R24,64
+sts 122,R24
+L5:
+lds R2,122
+sbrc R2,6
+rjmp L5
+lds R16,120
+lds R17,120+1
+ret
+_main:
+rcall _port_init
+rcall _timer1_init
+rcall _adc_init
+L9:
+
+rcall _adc_get; adc_v = adc_get(); //ADC
+
+ldi R24,0xff; lt = 1023 - adc_v;
+ldi R25,3
+movw R12,R24
+sub R12,R16
+sbc R13,R17
+
+sub R24,R16; rt = 1023 - adc_v;
+sbc R25,R17
+movw R10,R24
+; 
+
+sts 136+1,R13; OCR1A = lt;
+sts 136,R12
+
+sts 138+1,R11; OCR1B = rt;
+sts 138,R10
+rjmp L9
+ret
