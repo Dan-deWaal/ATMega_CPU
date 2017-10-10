@@ -13,9 +13,9 @@ entity execute is
 			post_dec	: in 	std_logic;
 			status  	: in 	std_logic_vector(7 downto 0);
 			bits		: in 	std_logic_vector(2 downto 0);
-			opcode 	: in  std_logic_vector(7 downto 0)
-			regdata 	: out std_logic_vector(7 downto 0) 
-			p_addr	: out std_logic_vector( ) );
+			opcode 	: in  std_logic_vector(7 downto 0);
+			regdata 	: out std_logic_vector(7 downto 0) );
+			--p_addr	: out std_logic_vector( )
 end execute;
  
 architecture behaviour of execute is
