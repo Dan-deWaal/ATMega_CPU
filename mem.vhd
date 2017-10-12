@@ -1,10 +1,11 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
+use work.mem_init.all;
 
 entity mem is
 	generic (RamWidth : integer := 8;
-				AddrWidth : integer := 10);
+				AddrWidth : integer := 10 );
 	port(
 		clock : in std_logic;
 		wr		: in std_logic;
@@ -17,7 +18,7 @@ architecture MEMORY of mem is
 	constant memSize : integer := 2**AddrWidth;
 	type RAM is array(integer range <>) of std_logic_vector(RamWidth-1 downto 0);
 
-	signal rmem : RAM(0 to MemSize-1);
+	signal rmem : mem_content(0 to MemSize-1)(RamWidth-1 downto 0) := init_prog(memSize);
 	
 	begin
 	process(clock) is
