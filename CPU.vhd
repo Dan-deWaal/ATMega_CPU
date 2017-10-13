@@ -37,7 +37,7 @@ architecture ATMEGA_CPU of CPU is
 	signal status		: std_logic_vector(7 downto 0);
 	signal bits			: std_logic_vector(2 downto 0);
 	shared variable VRd		: std_logic_vector(4 downto 0);
-	shared variable VRr		: std_logic_vector(4 downto 0); --move these into the process
+	shared variable VRr		: std_logic_vector(4 downto 0);
 	
 	signal opcode		: std_logic_vector(7 downto 0);
 	
@@ -64,10 +64,11 @@ architecture ATMEGA_CPU of CPU is
 	shared variable r5		: std_logic_vector(4 downto 0);
 	shared variable r4		: std_logic_vector(3 downto 0);
 	shared variable r3		: std_logic_vector(2 downto 0);
-	shared variable imm12 : std_logic_vector(11 downto 0);
-	shared variable imm8	: std_logic_vector(7 downto 0);
+	shared variable imm12   : std_logic_vector(11 downto 0);
+	shared variable imm8	   : std_logic_vector(7 downto 0);
 	shared variable i2		: std_logic_vector(1 downto 0);
 	shared variable i4		: std_logic_vector(3 downto 0);
+	shared variable bnum    : std_logic_vector(2 downto 0);
 
 begin
 
@@ -103,7 +104,10 @@ begin
 	begin
 		if RESET = '1' then
 			pc <= (others => '0'); -- reset program counter
-			-- reset other registers, eg status.
+			status <= (others => '0');
+			reg <= ((others=> (others=>'0')));
+			
+			-- reset everything, data memory, stack, other registers, etc.
 		elsif rising_edge(CLK) then
 			case state is
 				when FETCH => 
@@ -131,6 +135,10 @@ begin
 												when "00" => --01. NOP  : No Operation 
 													state <= FETCH;
 												when "01" => --02. MOVW : Copy Register Pair
+													VRd := d4 & '0';
+													VRr := r4 & '1';
+													reg(to_integer(unsigned(VRd))) <= reg(to_integer(unsigned(VRr)));
+													reg(to_integer(unsigned(VRd))+1) <= reg(to_integer(unsigned(VRr))+1);
 													state <= FETCH;
 												when "10" => --03. MULS : Multiply Signed
 													state <= FETCH;
@@ -162,26 +170,26 @@ begin
 									end case;
 								when "001" =>
 									case instruction(11 downto 10) is
-										when "00" => --11. CPSE : 
+										when "00" => --11. CPSE : Compare, skip if Equal
 											state <= FETCH;
-										when "01" => --12. CP   : 
+										when "01" => --12. CP   : Compare
 											state <= FETCH;
-										when "10" => --13. SUB  :
+										when "10" => --13. SUB  : Subtract without Carry
 											state <= FETCH;
-										when "11" => --14. ADC  : 
+										when "11" => --14. ADC  : Add with Carry
 											state <= FETCH;
 										when others => -- NOP
 											state <= FETCH;
 									end case;
 								when "010" =>
 									case instruction(11 downto 10) is
-										when "00" => --15. AND  : 
+										when "00" => --15. AND  : Logical AND 
 											state <= FETCH;
-										when "01" => --16. EOR  : 
+										when "01" => --16. EOR  : Exclusive OR
 											state <= FETCH;
-										when "10" => --17. OR   : 
+										when "10" => --17. OR   : Logical OR
 											state <= FETCH;
-										when "11" => --18. MOV  : 
+										when "11" => --18. MOV  : Copy Register
 											state <= FETCH;
 										when others => -- NOP
 											state <= FETCH;
@@ -293,6 +301,8 @@ begin
 														when "1000" =>
 															case instruction(8 downto 7) is
 																when "00" => --57. BSET : Flag Set
+																	bnum := instruction(6 downto 4);
+																	status(to_integer(unsigned(bnum))) <= '1'; 
 																	state <= FETCH;
 																when "01" => --58. BCLR : Flag Clear
 																	state <= FETCH;
@@ -354,6 +364,8 @@ begin
 								when "101" => --75. RCALL : Relative Call Subroutine
 									state <= FETCH;
 								when "110" => --76. LDI   : Load Immediate
+									VRd := '1' & d4;
+									reg(to_integer(unsigned(VRd))) <= imm8;
 									state <= FETCH;
 								when "111" =>
 									case instruction(11 downto 10) is

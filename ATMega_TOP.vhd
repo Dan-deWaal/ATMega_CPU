@@ -21,12 +21,13 @@ begin
 				RESET => RST,
 				CLK => C);
 
-	top: process (CLK)
-	begin
-		if (rising_edge(CLK)) then
-			
-			RST <= RESET;
-		end if;
-	end process top;	
+	RST <= RESET;
+--	top: process (CLK)
+--	begin
+--		if (rising_edge(CLK)) then
+--			
+--			RST <= RESET;
+--		end if;
+--	end process top;	
 
 end architecture ARCH_TOP;

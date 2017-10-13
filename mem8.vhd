@@ -16,7 +16,7 @@ architecture MEMORY8 of mem8 is
 	constant memSize : integer := 2**AddrWidth;
 	type RAM is array(integer range <>) of std_logic_vector(7 downto 0);
 
-	signal rmem : RAM(7 downto 0);
+	signal rmem : RAM(0 to memSize-1) := ((others=> (others=>'0')));
 	
 	begin
 	process(clock) is

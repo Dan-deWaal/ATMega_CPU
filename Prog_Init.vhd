@@ -5,7 +5,8 @@ use IEEE.numeric_std.all;
 package prog_init is
 	type mem_content is array(integer range <>) of std_logic_vector(15 downto 0);
 	function init_prog(len:integer) return mem_content;
-	constant program : mem_content := (X"0000", X"0000");
+	--constant program : mem_content := (x"9408", x"9418", x"9428", x"9438", x"9448", x"9458", x"9468", x"9478");
+	constant program : mem_content := ("1001010000011000", "1001010000011000"); --, x"9418", x"9428", x"9438", x"9448", x"9458", x"9468", x"9478");
 	--constant data_mem : mem_content := (X"00", X"00");
 
 end package prog_init;
@@ -38,9 +39,11 @@ package body prog_init is
 --			for i in 0 to dlen-1 loop
 --				res(i) := program(i);
 --			end loop;
---			res(0) := program(0);
+			res(0) := "1110000000000001";
+			res(1) := "1110000000010010";
+			res(2) := "1110100010010001";
 			
-			for i in 1 to len-1 loop
+			for i in 3 to len-1 loop
 				res(i) := (others => '0');
 			end loop;
 		
