@@ -7,8 +7,10 @@ entity mem16 is
 	generic (AddrWidth : integer := 10 ); --1024 KB
 	port(
 		clock : in std_logic;
+		wr		: in std_logic;
 		addr	: in std_logic_vector(AddrWidth-1 downto 0);
-		dr		: out std_logic_vector(15 downto 0) );
+		dr		: out std_logic_vector(15 downto 0);
+		dw		: in std_logic_vector(15 downto 0)	);
 end entity mem16;
 
 architecture MEMORY16 of mem16 is
@@ -21,11 +23,15 @@ architecture MEMORY16 of mem16 is
 	process(clock) is
 	begin
 		if rising_edge(clock) then
-		
 			--read the memory location
 			dr <= rmem(to_integer(unsigned(addr)));
 			
-		end if;	
+			--write the memory location
+			if wr = '1' then
+				rmem(to_integer(unsigned(addr))) <= dw;
+			end if;
+			
+		end if;
 	end process;
 
 end architecture MEMORY16;
