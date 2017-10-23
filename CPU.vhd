@@ -154,6 +154,7 @@ begin
 										when "00" =>
 											case instruction(9 downto 8) is
 												when "00" => 										--01. NOP  : No Operation 
+													NULL;
 													
 												when "01" => 										--02. MOVW : Copy Register Pair
 													VRd := d4 & '0';
