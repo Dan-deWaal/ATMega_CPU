@@ -52,11 +52,13 @@ architecture alu_arch of alu is
     signal negative : std_logic;
     signal overflow : std_logic;
 begin
-    add_result <= X + Y + ('0' & STATUS_IN(0)) when CONTROL = ADC_OP else
-                  X + 1 when CONTROL = INC_OP else
+    add_result <= "0000000" & ('0' & X(7 downto 0)) + ('0' & Y) + ('0' & STATUS_IN(0)) when CONTROL = ADC_OP else
+                  "0000000" & ('0' & X(7 downto 0)) + ('0' & Y) when CONTROL = ADD_OP else
+						"0000000" & ('0' & X(7 downto 0)) + 1 when CONTROL = INC_OP else
                   X + Y;
 
-    sub_result <= X - Y - ('0' & STATUS_IN(0)) when CONTROL = SBC_OP else
+    sub_result <= "0000000" & ('0' & X(7 downto 0)) - ('0' & Y) - ('0' & STATUS_IN(0)) when CONTROL = SBC_OP else
+                  "0000000" & ('0' & X(7 downto 0)) - ('0' & Y) when CONTROL = SUB_OP else
                   X - 1 when CONTROL = DEC_OP else
                   0 - X when CONTROL = NEG_OP else
                   X - Y;
@@ -142,7 +144,7 @@ begin
                         (not X(7) and not Y(7) and add_result(7)) when ADD_OP,
                     (X(7) and Y(7) and not add_result(7)) or 
                         (not X(7) and not Y(7) and add_result(7)) when ADC_OP,
-                    add_result(15) and (not X(7)) when ADIW_OP,
+                    add_result(15) and (not X(15)) when ADIW_OP,
                     not X(7) and X(6) and X(5) and X(4) and X(3) and X(2) and X(1) and X(0) when INC_OP,
 
                     (X(7) and not Y(7) and not sub_result(7)) or 
