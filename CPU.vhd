@@ -5,7 +5,8 @@ use IEEE.numeric_std.all;
 entity CPU is
 	port(
 		RESET			: in  std_logic;
-		CLK 			: in  std_logic
+		CLK 			: in  std_logic;
+		OUTPUT		: out std_logic
 	);
 end entity CPU;
 
@@ -59,7 +60,7 @@ architecture ATMEGA_CPU of CPU is
 	alias pc 				: std_logic_vector(PROGMEM_SIZE-1 downto 0) 	is p_addr;
 	alias instruction 	: std_logic_vector(15 downto 0) 					is p_dr;
 	
-	shared variable pc_inc  : integer := 1;
+	shared variable pc_inc  : integer range -32768 to 32767;
 	
 	shared variable VRd		: std_logic_vector(4 downto 0);
 	shared variable VRr		: std_logic_vector(4 downto 0);
@@ -130,6 +131,8 @@ begin
 			
 			-- reset everything, data memory, stack, other registers, etc.
 		elsif rising_edge(CLK) then
+			OUTPUT <= reg(0)(0);
+		
 			d5		:= instruction(8 downto 4);
 			d4		:= instruction(7 downto 4);
 			d3		:= instruction(6 downto 4);
@@ -257,7 +260,9 @@ begin
 												when "00" => 
 													case i4 is
 														when "0000" => 								--28. LDS : Load Direct from data space 16-bit
-															
+															opcode <= 28;
+															Rd <= d5;
+															state <= EXECUTE2;
 														when "1100" => 								--29. LD  : Load Indirect X
 															
 														when "0010" => 								--30. LD  : Load Indirect Z and Pre Decrement
@@ -280,7 +285,9 @@ begin
 												when "01" => 
 													case i4 is
 														when "0000" => 								--37. STS  : Store Direct to Data Space 16-bit
-															
+															Rd <= d5;
+															opcode <= 37;
+															state <= EXECUTE2;
 														when "1111" => 								--38. PUSH : Push Register on Stack
 															
 														when "0100" => 								--39. XCH  : Exchange Z
@@ -398,9 +405,9 @@ begin
 								when "010" =>
 									case instruction(11) is
 										when '0' => 												--68. LDS : Load Direct from data space 7-bit
-											
+											NULL;
 										when '1' => 												--69. STS : Store Direct to Data Space 7-bit
-											
+											NULL;
 										when others => -- NOP
 											NULL;
 									end case;
@@ -464,6 +471,17 @@ begin
 				------------------------------------------------------------------------------------	
 				when EXECUTE2 => 																	-- EXECUTE2
 					case opcode is
+						when 28 => 																	--28. LDS : Load Direct from data space 16-bit		
+ 							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);				-- where in data memory to read from 				
+ 							pc_inc := 0;
+							state <= EXECUTE3;
+							
+ 						when 37 => 																	--37. STS  : Store Direct to Data Space 16-bit		
+ 							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);
+							d_dw <= reg(to_integer(unsigned(Rd)));			
+ 							d_wr <= '1';			
+ 							state <= EXECUTE1;
+ 
 						when 59 => 																	--59. RET  : Subroutine Return
 							pc <= s_dr(PROGMEM_SIZE-1 downto 0);
 							stack_p <= std_logic_vector(unsigned(stack_p)-1);
@@ -485,7 +503,14 @@ begin
 					end case;
 				------------------------------------------------------------------------------------	
 				when EXECUTE3 => 
-					state <= EXECUTE1;
+					case opcode is
+						when 28 => 																	--28. LDS : Load Direct from data space 16-bit		
+ 							reg(to_integer(unsigned(Rd))) <= d_dr;
+ 							state <= EXECUTE1;
+							
+ 						when others  => 		
+ 							state <= EXECUTE1;		
+ 					end case;
 				------------------------------------------------------------------------------------	
 				when EXECUTE4 => 
 					state <= EXECUTE1;
@@ -498,7 +523,11 @@ begin
 				------------------------------------------------------------------------------------	
 			end case;
 			--move program counter every clock cycle.
-			pc <= std_logic_vector( unsigned(pc) + pc_inc );
+			if (pc_inc < 0) then
+				pc <= std_logic_vector( unsigned(pc) - pc_inc );
+			else
+				pc <= std_logic_vector( unsigned(pc) + pc_inc );
+			end if;
 		end if;
 	end process cpu_state_machine;
 	
