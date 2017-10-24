@@ -215,6 +215,7 @@ begin
 										when "10" => 												--17. OR   : Logical OR
 											
 										when "11" => 												--18. MOV  : Copy Register
+											reg(to_integer(unsigned(Rd)))<=reg(to_integer(unsigned(Rr)));
 											
 										when others => -- NOP
 											NULL;
@@ -256,7 +257,8 @@ begin
 												when "00" => 
 													case i4 is
 														when "0000" => 								--28. LDS : Load Direct from data space 16-bit
-															
+															opcode <= 28;
+															state <= EXECUTE2;	
 														when "1100" => 								--29. LD  : Load Indirect X
 															
 														when "0010" => 								--30. LD  : Load Indirect Z and Pre Decrement
@@ -279,7 +281,8 @@ begin
 												when "01" => 
 													case i4 is
 														when "0000" => 								--37. STS  : Store Direct to Data Space 16-bit
-															
+															opcode <= 37;
+															state <= EXECUTE2;
 														when "1111" => 								--38. PUSH : Push Register on Stack
 															
 														when "0100" => 								--39. XCH  : Exchange Z
@@ -397,9 +400,9 @@ begin
 								when "010" =>
 									case instruction(11) is
 										when '0' => 												--68. LDS : Load Direct from data space 7-bit
-											
+											NULL;									
 										when '1' => 												--69. STS : Store Direct to Data Space 7-bit
-											
+											NULL;
 										when others => -- NOP
 											NULL;
 									end case;
@@ -463,6 +466,16 @@ begin
 				------------------------------------------------------------------------------------	
 				when EXECUTE2 => 																	-- EXECUTE2
 					case opcode is
+						when 28 => 																	--28. LDS : Load Direct from data space 16-bit
+							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);				-- where in data memory to read from 
+							pc_inc := -1;
+							state <= EXECUTE3;
+						when 37 => 																	--37. STS  : Store Direct to Data Space 16-bit
+							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);				
+							d_wr <= '1';
+							pc_inc := -1;
+							state <= EXECUTE3;
+						
 						when 59 => 																	--59. RET  : Subroutine Return
 							pc <= s_dr(PROGMEM_SIZE-1 downto 0);
 							stack_p <= std_logic_vector(unsigned(stack_p)-1);
@@ -482,7 +495,21 @@ begin
 					end case;
 				------------------------------------------------------------------------------------	
 				when EXECUTE3 => 
-					state <= EXECUTE1;
+					case opcode is
+					when 28 => 																	--28. LDS : Load Direct from data space 16-bit
+							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);			-- where in data memory to read from 
+							reg(to_integer(unsigned(d5)))<=d_dr;
+							pc_inc := 2;
+							state <= EXECUTE1;
+					when 37 => 																	--28. LDS : Load Direct from data space 16-bit
+							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);			-- where in data memory to read from 
+							d_dw<=reg(to_integer(unsigned(d5)));
+							pc_inc := 2;
+							d_wr <= '0';
+							state <= EXECUTE1;
+							when others  => 
+							state <= EXECUTE1;
+					end case;
 				------------------------------------------------------------------------------------	
 				when EXECUTE4 => 
 					state <= EXECUTE1;
