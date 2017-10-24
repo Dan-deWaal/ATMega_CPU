@@ -43,8 +43,6 @@ architecture ATMEGA_CPU of CPU is
 	signal post_dec	: std_logic;
 	signal status		: std_logic_vector(7 downto 0);
 	signal bits			: std_logic_vector(2 downto 0);
-	shared variable VRd		: std_logic_vector(4 downto 0);
-	shared variable VRr		: std_logic_vector(4 downto 0);
 	
 	signal opcode		: integer range 0 to 255;
 	
@@ -59,10 +57,12 @@ architecture ATMEGA_CPU of CPU is
 	signal state: cpu_states := EXECUTE1;
 	
 	alias pc 				: std_logic_vector(PROGMEM_SIZE-1 downto 0) 	is p_addr;
-	alias instruction 	: std_logic_vector(15 downto 0) 				is p_dr;
+	alias instruction 	: std_logic_vector(15 downto 0) 					is p_dr;
 	
 	shared variable pc_inc  : integer := 1;
 	
+	shared variable VRd		: std_logic_vector(4 downto 0);
+	shared variable VRr		: std_logic_vector(4 downto 0);
 	shared variable d5		: std_logic_vector(4 downto 0);
 	shared variable d4		: std_logic_vector(3 downto 0);
 	shared variable d3		: std_logic_vector(2 downto 0);
@@ -215,6 +215,7 @@ begin
 										when "10" => 												--17. OR   : Logical OR
 											
 										when "11" => 												--18. MOV  : Copy Register
+											reg(to_integer(unsigned(Rd))) <= reg(to_integer(unsigned(Rr)));
 											
 										when others => -- NOP
 											NULL;
@@ -470,11 +471,13 @@ begin
 						
 						when 63 =>  																--63. JMP  : Jump
 							--immediate address is loaded from prog_mem on this clock cycle.
-							pc <= p_dr(PROGMEM_SIZE-1 downto 0);
+							--pc <= instruction(PROGMEM_SIZE-1 downto 0);
+							pc_inc := to_integer(unsigned(instruction(PROGMEM_SIZE-1 downto 0)) - unsigned(pc));
 							state <= EXECUTE1;
 						
 						when 64 =>  																--64. CALL : Call Subroutine
-							pc <= p_dr(PROGMEM_SIZE-1 downto 0);
+							--pc <= p_dr(PROGMEM_SIZE-1 downto 0);
+							pc_inc := to_integer(unsigned(instruction(PROGMEM_SIZE-1 downto 0)) - unsigned(pc));
 							state <= EXECUTE1;
 						
 						when others  => 
