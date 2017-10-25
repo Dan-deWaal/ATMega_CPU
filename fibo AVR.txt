@@ -1,0 +1,17 @@
+       MOV d1,1
+       MOV d2,1
+       MOV d3,0
+
+       CALL FIBO
+       RJMP L1
+
+FIBO:  PUSH d1
+       MOV d4,d1
+       ADD d1,d2
+       MOV d2,d4
+       INC d3
+       CPI d3,20
+       BRBS 0,FIBO
+       RET
+
+L1:    POP r10
