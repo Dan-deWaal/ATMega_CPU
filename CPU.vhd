@@ -47,12 +47,12 @@ architecture ATMEGA_CPU of CPU is
 	
 	signal opcode		: integer range 0 to 255;
 	
-	signal aluA			: std_logic_vector(15 downto 0);
-	signal aluB			: std_logic_vector(7 downto 0);
+	signal aluX			: signed(15 downto 0);
+	signal aluY			: signed(7 downto 0);
 	signal aluControl : std_logic_vector(4 downto 0);
 	signal aluS_in		: std_logic_vector(7 downto 0);
 	signal aluS_out	: std_logic_vector(7 downto 0);
-	signal aluResult	: std_logic_vector(15 downto 0);
+	signal aluResult	: signed(15 downto 0);
 	
 	type cpu_states is (EXECUTE1, EXECUTE2, EXECUTE3, EXECUTE4, EXECUTE5, HALT);
 	signal state: cpu_states := EXECUTE1;
@@ -121,6 +121,16 @@ begin
 		dr => s_dr
 	);
 	
+	alu_entity: entity work.alu
+	port map(
+		X => aluX,
+		Y => aluY,
+		CONTROL => aluControl,
+		STATUS_IN => aluS_in,
+		STATUS_OUT => aluS_out,
+		OUTPUT => aluResult
+	);
+	
 	cpu_state_machine: process(CLK, RESET)
 	begin
 		if RESET = '1' then
@@ -165,6 +175,8 @@ begin
 													reg(to_integer(unsigned(VRd))) <= reg(to_integer(unsigned(VRr)));
 													reg(to_integer(unsigned(VRd))+1) <= reg(to_integer(unsigned(VRr))+1);
 													
+													pc_inc := 0;
+													state <= EXECUTE2;
 												when "10" => 										--03. MULS : Multiply Signed
 													
 												when "11" =>
@@ -189,7 +201,14 @@ begin
 										when "10" => 												--09. SBC  : Subtract with Carry
 											
 										when "11" => 												--10. ADD  : Add without Carry
+											opcode <= 10;
+											aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+											aluY <= signed(reg(to_integer(unsigned(r5))));
+											aluControl <= "00000";
+											aluS_in <= "00000000";
 											
+											pc_inc := 0;
+											state <= EXECUTE2;
 										when others => -- NOP
 											NULL;
 									end case;
@@ -471,6 +490,9 @@ begin
 				------------------------------------------------------------------------------------	
 				when EXECUTE2 => 																	-- EXECUTE2
 					case opcode is
+						when 10 =>																	--10. ADD  : Add without Carry
+							reg(to_integer(unsigned(d5))) <= std_logic_vector(aluResult(7 downto 0));
+							state<= EXECUTE1;
 						when 28 => 																	--28. LDS : Load Direct from data space 16-bit		
  							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);				-- where in data memory to read from 				
  							pc_inc := 0;

@@ -41,11 +41,12 @@ package body prog_init is
 --			end loop;
 			res(0) := "1110011000010100";
 			res(1) := "1001001100010000";
-			res(2) := "0000000000000001";
-			res(3) := "1001000100100000";
-			res(4) := "0000000000000001";
+			res(2) := "0000111100000001";
+--			res(2) := "0000000000000001";
+--			res(3) := "1001000100100000";
+--			res(4) := "0000000000000001";
 			
-			for i in 5 to len-1 loop  -- change to 1 more than program length. **********
+			for i in 3 to len-1 loop  -- change to 1 more than program length. **********
 				res(i) := (others => '0');
 			end loop;
 		
