@@ -39,12 +39,9 @@ package body prog_init is
 --			for i in 0 to dlen-1 loop
 --				res(i) := program(i);
 --			end loop;
-			res(0) := "1110011000010100";
-			res(1) := "1001001100010000";
-			res(2) := "0000111100000001";
---			res(2) := "0000000000000001";
---			res(3) := "1001000100100000";
---			res(4) := "0000000000000001";
+			res(0) := "1110000000000001";	-- LDI 0(16), 1
+			res(1) := "1110000000010010";	-- LDI 1(17), 2
+			res(2) := "0000111100000001";	-- ADD 16, 17
 			
 			for i in 3 to len-1 loop  -- change to 1 more than program length. **********
 				res(i) := (others => '0');
