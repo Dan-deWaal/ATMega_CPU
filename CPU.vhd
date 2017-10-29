@@ -73,6 +73,8 @@ architecture ATMEGA_CPU of CPU is
 	shared variable imm12   : std_logic_vector(11 downto 0);
 	shared variable imm8		: std_logic_vector(7 downto 0);
 	shared variable imm7		: std_logic_vector(6 downto 0);
+	shared variable imm6		: std_logic_vector(5 downto 0);
+
 	shared variable i2		: std_logic_vector(1 downto 0);
 	shared variable i4		: std_logic_vector(3 downto 0);
 	shared variable bnum    : std_logic_vector(2 downto 0);
@@ -107,7 +109,7 @@ begin
 		dw => d_dw,
 		dr => d_dr
 	);
-	*************is being loaded with prog_init
+	-- *************is being loaded with prog_init
 	-- Stack memory: 1 K (words), 16-bit wide, read/write  ************* FIX!!! is being loaded with prog_init
 	make_stackMem: entity work.mem16
 	generic map(
@@ -178,18 +180,64 @@ begin
 													reg(to_integer(unsigned(VRd))+1) <= reg(to_integer(unsigned(VRr))+1);
 													
 												when "10" => 										--03. MULS : Multiply Signed
+													opcode <= 3;
+													aluX <= "00000000" & signed(reg(to_integer(unsigned('1' & d4))));
+													aluY <= signed(reg(to_integer(unsigned('1' & r4))));
+													aluControl <= std_logic_vector(to_unsigned(25, 5));	-- MULS
+													aluS_in <= status;
+											
+													Rd <= "00000"; 		--0 for MUL
 													
+													pc_inc := 0;
+													state <= EXECUTE2;
+
 												when "11" =>
 													i2 := instruction(7) & instruction(3);
 													case i2 is
 														when "00" => 								--04. MULSU  : Multiply Signed with Unsigned
+															opcode <= 3;
+															aluX <= "00000000" & signed(reg(to_integer("10" & unsigned(d3))));
+															aluY <= signed(reg(to_integer("10" & unsigned(r3))));
+															aluControl <= std_logic_vector(to_unsigned(26, 5));	-- MULSU
+															aluS_in <= status;
+													
+															Rd <= "00000"; 		--0 for MUL
 															
+															pc_inc := 0;
+															state <= EXECUTE2;
 														when "10" => 								--05. FMULS  : Fractional Multiply Signed
+															opcode <= 3;
+															aluX <= "00000000" & signed(reg(to_integer("10" & unsigned(d3))));
+															aluY <= signed(reg(to_integer("10" & unsigned(r3))));
+															aluControl <= std_logic_vector(to_unsigned(28, 5));	-- FMULS
+															aluS_in <= status;
+													
+															Rd <= "00000"; 		--0 for MUL
 															
+															pc_inc := 0;
+															state <= EXECUTE2;
 														when "01" => 								--06. FMUL   : Fractional Multiply Unsigned
+															opcode <= 3;
+															aluX <= "00000000" & signed(reg(to_integer("10" & unsigned(d3))));
+															aluY <= signed(reg(to_integer("10" & unsigned(r3))));
+															aluControl <= std_logic_vector(to_unsigned(27, 5));	-- FMULU
+															aluS_in <= status;
+													
+															Rd <= "00000"; 		--0 for MUL
 															
+															pc_inc := 0;
+															state <= EXECUTE2;
 														when "11" => 								--07. FMULSU : Fractional Multiply Signed with Unsigned
+															opcode <= 3;
+															aluX <= "00000000" & signed(reg(to_integer("10" & unsigned(d3))));
+															aluY <= signed(reg(to_integer("10" & unsigned(r3))));
+															aluControl <= std_logic_vector(to_unsigned(29, 5));	-- FMULSU
+															aluS_in <= status;
+													
+															Rd <= "00000"; 		--0 for MUL
 															
+															pc_inc := 0;
+															state <= EXECUTE2;
 														when others => -- NOP
 															NULL;
 													end case;
@@ -197,20 +245,39 @@ begin
 													NULL;
 											end case;
 										when "01" => 												--08. CPC  : Compare with Carry
-											
-										when "10" => 												--09. SBC  : Subtract with Carry
-											
-										when "11" => 												--10. ADD  : Add without Carry
-											opcode <= 10;
+											opcode <= 8;
 											aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
 											aluY <= signed(reg(to_integer(unsigned(r5))));
-											aluControl <= "00000";
-											aluS_in <= "00000000";
+											aluControl <= std_logic_vector(to_unsigned(4, 5));	-- SBC
+											aluS_in <= status;
+											
+											pc_inc := 0;
+											state <= EXECUTE2;
+
+										when "10" => 												--09. SBC  : Subtract with Carry
+											opcode <= 9;
+											aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+											aluY <= signed(reg(to_integer(unsigned(r5))));
+											aluControl <= std_logic_vector(to_unsigned(4, 5));	-- SBC
+											aluS_in <= status;
 											
 											Rd <= d5;
 											
 											pc_inc := 0;
 											state <= EXECUTE2;
+										
+										when "11" => 												--10. ADD  : Add without Carry
+											opcode <= 9;
+											aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+											aluY <= signed(reg(to_integer(unsigned(r5))));
+											aluControl <= std_logic_vector(to_unsigned(0, 5));	--ADD
+											aluS_in <= status;
+											
+											Rd <= d5;
+											
+											pc_inc := 0;
+											state <= EXECUTE2;
+										
 										when others => -- NOP
 											NULL;
 									end case;
@@ -222,22 +289,74 @@ begin
 											end if;
 											
 										when "01" => 												--12. CP   : Compare
+											opcode <= 8;
+											aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+											aluY <= signed(reg(to_integer(unsigned(r5))));
+											aluControl <= std_logic_vector(to_unsigned(3, 5));	--SUB
+											aluS_in <= status;
 											
+											pc_inc := 0;
+											state <= EXECUTE2;
 										when "10" => 												--13. SUB  : Subtract without Carry
+											opcode <= 9;
+											aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+											aluY <= signed(reg(to_integer(unsigned(r5))));
+											aluControl <= std_logic_vector(to_unsigned(3, 5));	--SUB
+											aluS_in <= status;
 											
+											Rd <= d5;
+											
+											pc_inc := 0;
+											state <= EXECUTE2;
 										when "11" => 												--14. ADC  : Add with Carry
+											opcode <= 9;
+											aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+											aluY <= signed(reg(to_integer(unsigned(r5))));
+											aluControl <= std_logic_vector(to_unsigned(1, 5));	--ADC
+											aluS_in <= status;
 											
+											Rd <= d5;
+											
+											pc_inc := 0;
+											state <= EXECUTE2;
 										when others => -- NOP
 											NULL;
 									end case;
 								when "010" =>
 									case instruction(11 downto 10) is
 										when "00" => 												--15. AND  : Logical AND 
+											opcode <= 9;
+											aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+											aluY <= signed(reg(to_integer(unsigned(r5))));
+											aluControl <= std_logic_vector(to_unsigned(7, 5));	--AND
+											aluS_in <= status;
 											
+											Rd <= d5;
+											
+											pc_inc := 0;
+											state <= EXECUTE2;
 										when "01" => 												--16. EOR  : Exclusive OR
+											opcode <= 9;
+											aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+											aluY <= signed(reg(to_integer(unsigned(r5))));
+											aluControl <= std_logic_vector(to_unsigned(9, 5));	--XOR
+											aluS_in <= status;
 											
+											Rd <= d5;
+											
+											pc_inc := 0;
+											state <= EXECUTE2;
 										when "10" => 												--17. OR   : Logical OR
+											opcode <= 9;
+											aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+											aluY <= signed(reg(to_integer(unsigned(r5))));
+											aluControl <= std_logic_vector(to_unsigned(8, 5));	--OR
+											aluS_in <= status;
 											
+											Rd <= d5;
+											
+											pc_inc := 0;
+											state <= EXECUTE2;
 										when "11" => 												--18. MOV  : Copy Register
 											reg(to_integer(unsigned(Rd))) <= reg(to_integer(unsigned(Rr)));
 											
@@ -245,15 +364,63 @@ begin
 											NULL;
 									end case;
 								when "011" => 														--19. CPI  : Compare with Immediate
+									opcode <= 8;
+									aluX <= "00000000" & signed(reg(to_integer(unsigned('1' & d4))));
+									aluY <= signed(imm8);
+									aluControl <= std_logic_vector(to_unsigned(3, 5));	--SUB
+									aluS_in <= status;
 									
+									pc_inc := 0;
+									state <= EXECUTE2;
+								
 								when "100" => 														--20. SBCI : Subtract Immediate with Carry
+									opcode <= 9;
+									aluX <= "00000000" & signed(reg(to_integer(unsigned('1' & d4))));
+									aluY <= signed(imm8);
+									aluControl <= std_logic_vector(to_unsigned(4, 5));	--SBC
+									aluS_in <= status;
 									
+									Rd <= '1' & d4;
+									
+									pc_inc := 0;
+									state <= EXECUTE2;
+								
 								when "101" => 														--21. SUBI : Subtract Immediate
+									opcode <= 9;
+									aluX <= "00000000" & signed(reg(to_integer(unsigned('1' & d4))));
+									aluY <= signed(imm8);
+									aluControl <= std_logic_vector(to_unsigned(3, 5));	--SUB
+									aluS_in <= status;
 									
+									Rd <= '1' & d4;
+									
+									pc_inc := 0;
+									state <= EXECUTE2;
+								
 								when "110" => 														--22. ORI  : Logical OR with Immediate
+									opcode <= 9;
+									aluX <= "00000000" & signed(reg(to_integer(unsigned('1' & d4))));
+									aluY <= signed(imm8);
+									aluControl <= std_logic_vector(to_unsigned(8, 5));	--OR
+									aluS_in <= status;
 									
+									Rd <= '1' & d4;
+									
+									pc_inc := 0;
+									state <= EXECUTE2;
+								
 								when "111" => 														--23. ANDI : Logical AND with Immediate
+									opcode <= 9;
+									aluX <= "00000000" & signed(reg(to_integer(unsigned('1' & d4))));
+									aluY <= signed(imm8);
+									aluControl <= std_logic_vector(to_unsigned(7, 5));	--AND
+									aluS_in <= status;
 									
+									Rd <= '1' & d4;
+									
+									pc_inc := 0;
+									state <= EXECUTE2;
+
 								when others => -- NOP
 									NULL;
 							end case;
@@ -339,19 +506,79 @@ begin
 												when "10" => 
 													case i4 is
 														when "0000" => 								--50. COM  : One’s Complement
+															opcode <= 9;
+															aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+															aluY <= "--------";
+															aluControl <= std_logic_vector(to_unsigned(10, 5));	--NOT
+															aluS_in <= status;
 															
+															Rd <= d5;
+															
+															pc_inc := 0;
+															state <= EXECUTE2;
+														
 														when "0001" => 								--51. NEG  : Two’s Complement
+															opcode <= 9;
+															aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+															aluY <= "--------";
+															aluControl <= std_logic_vector(to_unsigned(6, 5));	--NEG
+															aluS_in <= status;
 															
+															Rd <= d5;
+															
+															pc_inc := 0;
+															state <= EXECUTE2;
+
 														when "0010" => 								--52. SWAP : Swap Nibbles 
 															
 														when "0011" => 								--53. INC  : Increment
+															opcode <= 9;
+															aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+															aluY <= "--------";
+															aluControl <= std_logic_vector(to_unsigned(2, 5));	--INC
+															aluS_in <= status;
 															
+															Rd <= d5;
+															
+															pc_inc := 0;
+															state <= EXECUTE2;
+
 														when "0101" => 								--54. ASR  : Arithmetic Shift Right
+															opcode <= 9;
+															aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+															aluY <= "--------";
+															aluControl <= std_logic_vector(to_unsigned(13, 5));	--ASR
+															aluS_in <= status;
 															
+															Rd <= d5;
+															
+															pc_inc := 0;
+															state <= EXECUTE2;
+
 														when "0110" => 								--55. LSR  : Logical Shift Right
+															opcode <= 9;
+															aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+															aluY <= "--------";
+															aluControl <= std_logic_vector(to_unsigned(12, 5));	--LSR
+															aluS_in <= status;
 															
+															Rd <= d5;
+															
+															pc_inc := 0;
+															state <= EXECUTE2;
+
 														when "0111" => 								--56. ROR  : Rotate Right Through Carry
+															opcode <= 9;
+															aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+															aluY <= "--------";
+															aluControl <= std_logic_vector(to_unsigned(15, 5));	--ROR
+															aluS_in <= status;
 															
+															Rd <= d5;
+															
+															pc_inc := 0;
+															state <= EXECUTE2;
+
 														when "1000" =>
 															case instruction(8 downto 7) is
 																when "00" => 						--57. BSET : Flag Set
@@ -410,11 +637,32 @@ begin
 															NULL;
 													end case;
 												when "11" =>
+													imm6 := instruction(7 downto 6) & instruction(3 downto 0);
+													VRd := "11" & instruction(5 downto 4) & "0";
 													case instruction(8) is
 														when '0' => 								--65. ADIW : Add Immediate to Word
+															opcode <= 3;
+															aluX <= signed(reg(to_integer(unsigned(VRd))+1)) & signed(reg(to_integer(unsigned(VRd))));
+															aluY <= resize(signed(imm6), 8);
+															aluControl <= std_logic_vector(to_unsigned(16, 5));	--ADIW
+															aluS_in <= status;
 															
+															Rd <= Vrd;
+															
+															pc_inc := 0;
+															state <= EXECUTE2;
+
 														when '1' => 								--66. SBIW : Subtract Immediate from Word
+															opcode <= 3;
+															aluX <= signed(reg(to_integer(unsigned(VRd))+1)) & signed(reg(to_integer(unsigned(VRd))));
+															aluY <= resize(signed(imm6), 8);
+															aluControl <= std_logic_vector(to_unsigned(17, 5));	--SBIW
+															aluS_in <= status;
 															
+															Rd <= Vrd;
+															
+															pc_inc := 0;
+															state <= EXECUTE2;
 														when others => -- NOP
 															NULL;
 													end case;
@@ -422,7 +670,16 @@ begin
 													NULL;
 											end case;
 										when '1' => 												--67. MUL  : Multiply Unsigned
+											opcode <= 3;
+											aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+											aluY <= signed(reg(to_integer(unsigned(r5))));
+											aluControl <= std_logic_vector(to_unsigned(24, 5));	-- MULU
+											aluS_in <= status;
+									
+											Rd <= "00000"; 		--0 for MUL
 											
+											pc_inc := 0;
+											state <= EXECUTE2;
 										when others => -- NOP
 											NULL;
 									end case;
@@ -494,10 +751,27 @@ begin
 
 				------------------------------------------------------------------------------------	
 				when EXECUTE2 => 																	-- EXECUTE2
-					case opcode is
-						when 10 =>																	--10. ADD  : Add without Carry
+					case opcode is 
+						--------- ALU ------------
+						when 3 =>																	--3. 16-bit ALU output
+							reg(to_integer(unsigned(Rd)+1)) <= std_logic_vector(aluResult(15 downto 8));
 							reg(to_integer(unsigned(Rd))) <= std_logic_vector(aluResult(7 downto 0));
-							state<= EXECUTE1;
+							status <= aluS_out;
+
+							state <= EXECUTE1;
+
+						when 8 =>																	--9. 8-bit ALU compare (registers don't change)
+							status <= aluS_out;
+
+							state <= EXECUTE1;
+
+						when 9 =>																	--10. 8-bit ALU output (others)
+							reg(to_integer(unsigned(Rd))) <= std_logic_vector(aluResult(7 downto 0));
+							status <= aluS_out;
+
+							state <= EXECUTE1;
+						--------------------------
+
 						when 28 => 																	--28. LDS : Load Direct from data space 16-bit		
  							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);				-- where in data memory to read from 				
  							pc_inc := 0;
