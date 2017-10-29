@@ -207,6 +207,8 @@ begin
 											aluControl <= "00000";
 											aluS_in <= "00000000";
 											
+											Rd <= d5;
+											
 											pc_inc := 0;
 											state <= EXECUTE2;
 										when others => -- NOP
@@ -491,7 +493,7 @@ begin
 				when EXECUTE2 => 																	-- EXECUTE2
 					case opcode is
 						when 10 =>																	--10. ADD  : Add without Carry
-							reg(to_integer(unsigned(d5))) <= std_logic_vector(aluResult(7 downto 0));
+							reg(to_integer(unsigned(Rd))) <= std_logic_vector(aluResult(7 downto 0));
 							state<= EXECUTE1;
 						when 28 => 																	--28. LDS : Load Direct from data space 16-bit		
  							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);				-- where in data memory to read from 				
