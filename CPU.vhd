@@ -107,8 +107,8 @@ begin
 		dw => d_dw,
 		dr => d_dr
 	);
-	
-	-- Stack memory: 1 K (words), 16-bit wide, read/write
+	*************is being loaded with prog_init
+	-- Stack memory: 1 K (words), 16-bit wide, read/write  ************* FIX!!! is being loaded with prog_init
 	make_stackMem: entity work.mem16
 	generic map(
 		AddrWidth => STACKMEM_SIZE
@@ -137,7 +137,9 @@ begin
 			pc <= (others => '0'); -- reset program counter
 			status <= (others => '0');
 			reg <= ((others=> (others=>'0')));
-			stack_p <= (others => '1');
+			stack_p <= (others => '0');
+			s_addr <= (others => '0');
+			s_dw <= (others => '0');
 			
 			-- reset everything, data memory, stack, other registers, etc.
 		elsif rising_edge(CLK) then
@@ -175,8 +177,6 @@ begin
 													reg(to_integer(unsigned(VRd))) <= reg(to_integer(unsigned(VRr)));
 													reg(to_integer(unsigned(VRd))+1) <= reg(to_integer(unsigned(VRr))+1);
 													
-													pc_inc := 0;
-													state <= EXECUTE2;
 												when "10" => 										--03. MULS : Multiply Signed
 													
 												when "11" =>
@@ -393,14 +393,17 @@ begin
 													case instruction(3 downto 1) is
 														when "110" => 								--63. JMP  : Jump
 															opcode <= 63;
+															pc_inc := 0;
 															-- we have only 64k (16bit) of addressable memory, so the 6 bits of address here are ignored.
 															state <= EXECUTE2;
 															
 														when "111" => 								--64. CALL : Call Subroutine
+															s_wr <= '1';
 															s_addr <= stack_p;
 															s_dw <= ZEROS(15 downto PROGMEM_SIZE) & std_logic_vector( unsigned(pc) + 2);
 															stack_p <= std_logic_vector( unsigned(stack_p) + 1 );
 															opcode <= 64;
+															pc_inc := 0;
 															state <= EXECUTE2;
 															
 														when others => -- NOP
