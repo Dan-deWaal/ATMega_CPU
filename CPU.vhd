@@ -54,7 +54,7 @@ architecture ATMEGA_CPU of CPU is
 	signal aluS_out	: std_logic_vector(7 downto 0);
 	signal aluResult	: signed(15 downto 0);
 	
-	type cpu_states is (EXECUTE1, EXECUTE2, EXECUTE3, EXECUTE4, EXECUTE5, HALT);
+	type cpu_states is (EXECUTE1, EXECUTE2, EXECUTE3, HALT);
 	signal state: cpu_states := EXECUTE1;
 	
 	alias pc 				: std_logic_vector(PROGMEM_SIZE-1 downto 0) 	is p_addr;
@@ -466,6 +466,11 @@ begin
 														when "1101" => 								--35. LD  : Load Indirect X and Post Increment
 															
 														when "1111" => 								--36. POP : Pop Register from Stack
+															s_addr <= stack_p;
+															Rd <= d5;
+															opcode <= 36;
+															pc_inc := 0;
+															state <= EXECUTE2;
 															
 														when others => -- NOP
 															NULL;
@@ -477,6 +482,10 @@ begin
 															opcode <= 37;
 															state <= EXECUTE2;
 														when "1111" => 								--38. PUSH : Push Register on Stack
+															s_wr <= '1';
+															s_addr <= stack_p;
+															s_dw <= ZEROS(15 downto 5) & d5;
+															stack_p <= std_logic_vector( unsigned(stack_p) + 1 );
 															
 														when "0100" => 								--39. XCH  : Exchange Z
 															
@@ -586,6 +595,8 @@ begin
 																	status(to_integer(unsigned(bnum))) <= '1'; 
 																	
 																when "01" => 						--58. BCLR : Flag Clear
+																	bnum := instruction(6 downto 4);
+																	status(to_integer(unsigned(bnum))) <= '1'; 
 																	
 																when "10" => 						--59. RET  : Subroutine Return
 																	s_addr <= stack_p;
@@ -613,6 +624,16 @@ begin
 																	NULL;
 															end case;
 														when "1010" => 								--62. DEC  : Decrement
+															opcode <= 9;
+															aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
+															aluY <= "--------";
+															aluControl <= std_logic_vector(to_unsigned(5, 5));	--INC
+															aluS_in <= status;
+															
+															Rd <= d5;
+															
+															pc_inc := 0;
+															state <= EXECUTE2;
 															
 														when others => -- NOP
 															NULL;
@@ -776,7 +797,12 @@ begin
  							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);				-- where in data memory to read from 				
  							pc_inc := 0;
 							state <= EXECUTE3;
-							
+						
+						when 36 =>
+							reg(to_integer(unsigned(Rd))) <= s_dr(7 downto 0);
+							stack_p <= std_logic_vector(unsigned(stack_p)-1);
+							state <= EXECUTE1;
+						
  						when 37 => 																	--37. STS  : Store Direct to Data Space 16-bit		
  							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);
 							d_dw <= reg(to_integer(unsigned(Rd)));			
@@ -812,12 +838,6 @@ begin
  						when others  => 		
  							state <= EXECUTE1;		
  					end case;
-				------------------------------------------------------------------------------------	
-				when EXECUTE4 => 
-					state <= EXECUTE1;
-				------------------------------------------------------------------------------------	
-				when EXECUTE5 => 
-					state <= EXECUTE1;
 				------------------------------------------------------------------------------------	
 				when HALT => 
 					NULL;
