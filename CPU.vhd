@@ -357,7 +357,7 @@ begin
 											pc_inc := 0;
 											state <= EXECUTE2;
 										when "11" => 												--18. MOV  : Copy Register
-											reg(to_integer(unsigned(Rd))) <= reg(to_integer(unsigned(Rr)));
+											reg(to_integer(unsigned(d5))) <= reg(to_integer(unsigned(r5)));
 											
 										when others => -- NOP
 											NULL;
@@ -595,7 +595,7 @@ begin
 																	
 																when "01" => 						--58. BCLR : Flag Clear
 																	bnum := instruction(6 downto 4);
-																	status(to_integer(unsigned(bnum))) <= '1'; 
+																	status(to_integer(unsigned(bnum))) <= '0'; 
 																	
 																when "10" => 						--59. RET  : Subroutine Return
 																	s_addr <= stack_p;
