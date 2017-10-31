@@ -486,12 +486,68 @@ begin
     wait for 1 us;
     assert OUTPUT = 250 report "Incorrect MULU calculation" severity error;
 
+    -- Zero Test
+    X <= to_signed(0, 16);
+    Y <= to_signed(0, 8);
+    CONTROL <= MULU_OP;
+    wait for 1 us;
+    assert OUTPUT = 0 report "Incorrect MULU calculation" severity error;
+
+    -- Negative Test and Sign Test
+    X <= to_signed(5, 16);
+    Y <= to_signed(-1, 8);
+    CONTROL <= MULU_OP;
+    wait for 1 us;
+    assert OUTPUT = 645 report "Incorrect MULU calculation" severity error;
+
+    -- Overflow Test
+    X <= to_signed(20000, 16);
+    Y <= to_signed(50, 8);
+    CONTROL <= MULU_OP;
+    wait for 1 us;
+    assert OUTPUT = 250 report "Incorrect MULU calculation" severity error;
+
+    -- Carry Test
+    X <= to_signed(5, 16);
+    Y <= to_signed(50, 8);
+    CONTROL <= MULU_OP;
+    wait for 1 us;
+    assert OUTPUT = 250 report "Incorrect MULU calculation" severity error;
+
     ------------------------------------ Multiplication : MULS ------------------------------------- 
     X <= to_signed(5, 16);
     Y <= to_signed(50, 8);
     CONTROL <= MULS_OP;
     wait for 1 us;
     assert OUTPUT = 250 report "Incorrect MULS calculation" severity error;
+
+    -- Zero Test
+    X <= to_signed(0, 16);
+    Y <= to_signed(0, 8);
+    CONTROL <= MULS_OP;
+    wait for 1 us;
+    assert OUTPUT = 0 report "Incorrect MULS_OP calculation" severity error;
+
+    -- Negative Test and Sign Test
+    X <= to_signed(5, 16);
+    Y <= to_signed(-1, 8);
+    CONTROL <= MULS_OP;
+    wait for 1 us;
+    assert OUTPUT = -5 report "Incorrect MULS_OP calculation" severity error;
+
+    -- Overflow Test
+    X <= to_signed(20000, 16);
+    Y <= to_signed(50, 8);
+    CONTROL <= MULS_OP;
+    wait for 1 us;
+    assert OUTPUT = 250 report "Incorrect MULS_OP calculation" severity error;
+
+    -- Carry Test
+    X <= to_signed(5, 16);
+    Y <= to_signed(50, 8);
+    CONTROL <= MULS_OP;
+    wait for 1 us;
+    assert OUTPUT = 250 report "Incorrect MULS_OP calculation" severity error;
 
     ------------------------------------ Multiplication : MULSU ------------------------------------- 
     X <= to_signed(5, 16);
@@ -500,12 +556,68 @@ begin
     wait for 1 us;
     assert OUTPUT = 250 report "Incorrect MULSU calculation" severity error;
 
+    -- Zero Test
+    X <= to_signed(0, 16);
+    Y <= to_signed(0, 8);
+    CONTROL <= MULSU_OP;
+    wait for 1 us;
+    assert OUTPUT = 0 report "Incorrect MULSU_OP calculation" severity error;
+
+    -- Negative Test and Sign Test
+    X <= to_signed(-5, 16);
+    Y <= to_signed(1, 8);
+    CONTROL <= MULSU_OP;
+    wait for 1 us;
+    assert OUTPUT = -5 report "Incorrect MULSU_OP calculation" severity error;
+
+    -- Overflow Test
+    X <= to_signed(20000, 16);
+    Y <= to_signed(50, 8);
+    CONTROL <= MULSU_OP;
+    wait for 1 us;
+    assert OUTPUT = 250 report "Incorrect MULSU_OP calculation" severity error;
+
+    -- Carry Test
+    X <= to_signed(5, 16);
+    Y <= to_signed(50, 8);
+    CONTROL <= MULSU_OP;
+    wait for 1 us;
+    assert OUTPUT = 250 report "Incorrect MULSU_OP calculation" severity error;
+
     ------------------------------------ Multiplication : FMULU ------------------------------------- 
     X <= to_signed(5, 16);
     Y <= to_signed(50, 8);
     CONTROL <= FMULU_OP;
     wait for 1 us;
     assert OUTPUT = 500 report "Incorrect FMULU calculation" severity error;
+
+    -- Zero Test
+    X <= to_signed(0, 16);
+    Y <= to_signed(0, 8);
+    CONTROL <= FMULU_OP;
+    wait for 1 us;
+    assert OUTPUT = 0 report "Incorrect FMULU_OP calculation" severity error;
+
+    -- Negative Test and Sign Test
+    X <= to_signed(5, 16);
+    Y <= to_signed(-1, 8);
+    CONTROL <= FMULU_OP;
+    wait for 1 us;
+    assert OUTPUT = 650 report "Incorrect FMULU_OP calculation" severity error;
+
+    -- Overflow Test
+    X <= to_signed(20000, 16);
+    Y <= to_signed(50, 8);
+    CONTROL <= FMULU_OP;
+    wait for 1 us;
+    assert OUTPUT = 250 report "Incorrect FMULU_OP calculation" severity error;
+
+    -- Carry Test
+    X <= to_signed(5, 16);
+    Y <= to_signed(50, 8);
+    CONTROL <= FMULU_OP;
+    wait for 1 us;
+    assert OUTPUT = 250 report "Incorrect FMULU_OP calculation" severity error;
 
     ------------------------------------ Multiplication : FMULS ------------------------------------- 
     X <= to_signed(5, 16);
@@ -514,12 +626,68 @@ begin
     wait for 1 us;
     assert OUTPUT = 500 report "Incorrect FMULS calculation" severity error;
 
+    -- Zero Test
+    X <= to_signed(0, 16);
+    Y <= to_signed(0, 8);
+    CONTROL <= FMULS_OP;
+    wait for 1 us;
+    assert OUTPUT = 0 report "Incorrect FMULS_OP calculation" severity error;
+
+    -- Negative Test and Sign Test
+    X <= to_signed(4, 16);
+    Y <= to_signed(-1, 8);
+    CONTROL <= FMULS_OP;
+    wait for 1 us;
+    assert OUTPUT = -8 report "Incorrect FMULS_OP calculation" severity error;
+
+    -- Overflow Test
+    X <= to_signed(20000, 16);
+    Y <= to_signed(50, 8);
+    CONTROL <= FMULS_OP;
+    wait for 1 us;
+    assert OUTPUT = 250 report "Incorrect FMULS_OP calculation" severity error;
+
+    -- Carry Test
+    X <= to_signed(5, 16);
+    Y <= to_signed(50, 8);
+    CONTROL <= FMULS_OP;
+    wait for 1 us;
+    assert OUTPUT = 250 report "Incorrect FMULS_OP calculation" severity error;
+
     ------------------------------------ Multiplication : FMULSU ------------------------------------- 
     X <= to_signed(5, 16);
     Y <= to_signed(50, 8);
     CONTROL <= FMULSU_OP;
     wait for 1 us;
     assert OUTPUT = 500 report "Incorrect FMULSU calculation" severity error;
+
+    -- Zero Test
+    X <= to_signed(0, 16);
+    Y <= to_signed(0, 8);
+    CONTROL <= FMULSU_OP;
+    wait for 1 us;
+    assert OUTPUT = 0 report "Incorrect FMULSU_OP calculation" severity error;
+
+    -- Negative Test and Sign Test
+    X <= to_signed(-4, 16);
+    Y <= to_signed(1, 8);
+    CONTROL <= FMULSU_OP;
+    wait for 1 us;
+    assert OUTPUT = -8 report "Incorrect FMULSU_OP calculation" severity error;
+
+    -- Overflow Test
+    X <= to_signed(20000, 16);
+    Y <= to_signed(50, 8);
+    CONTROL <= FMULSU_OP;
+    wait for 1 us;
+    assert OUTPUT = 250 report "Incorrect FMULSU_OP calculation" severity error;
+
+    -- Carry Test
+    X <= to_signed(5, 16);
+    Y <= to_signed(50, 8);
+    CONTROL <= FMULSU_OP;
+    wait for 1 us;
+    assert OUTPUT = 250 report "Incorrect MULU calculation" severity error;
 
     ------------------------------------ Shift : LSL ------------------------------------- 
     X <= to_signed(64, 16);
@@ -528,12 +696,40 @@ begin
     wait for 1 us;
     assert OUTPUT = 128 report "Incorrect LSL calculation" severity error;
 
+    -- Zero Test
+    X <= to_signed(0, 16);
+    Y <= to_signed(0, 8);
+    CONTROL <= LSL_OP;
+    wait for 1 us;
+    assert OUTPUT = 0 report "Incorrect LSL_OP calculation" severity error;
+
+    -- Negative Test and Sign Test
+    X <= to_signed(-4, 16);
+    Y <= to_signed(1, 8);
+    CONTROL <= LSL_OP;
+    wait for 1 us;
+    assert OUTPUT = -8 report "Incorrect LSL_OP calculation" severity error;
+
     ------------------------------------ Shift : LSR ------------------------------------- 
     X <= to_signed(64, 16);
     Y <= to_signed(1, 8);
     CONTROL <= LSR_OP;
     wait for 1 us;
-    assert OUTPUT = 32 report "Incorrect LSR calculation" severity error;
+    assert OUTPUT = 32 report "Incorrect LSR_OP calculation" severity error;
+
+    -- Zero Test
+    X <= to_signed(0, 16);
+    Y <= to_signed(0, 8);
+    CONTROL <= LSR_OP;
+    wait for 1 us;
+    assert OUTPUT = 0 report "Incorrect LSR_OP calculation" severity error;
+
+    -- Negative Test and Sign Test
+    X <= to_signed(-4, 16);
+    Y <= to_signed(1, 8);
+    CONTROL <= LSR_OP;
+    wait for 1 us;
+    assert OUTPUT = -2 report "Incorrect LSR_OP calculation" severity error;
 
     ------------------------------------ Shift : ASR ------------------------------------- 
     X <= to_signed(64, 16);
@@ -542,6 +738,20 @@ begin
     wait for 1 us;
     assert OUTPUT = 32 report "Incorrect ASR calculation" severity error;
 
+    -- Zero Test
+    X <= to_signed(0, 16);
+    Y <= to_signed(0, 8);
+    CONTROL <= ASR_OP;
+    wait for 1 us;
+    assert OUTPUT = 0 report "Incorrect ASR_OP calculation" severity error;
+
+    -- Negative Test and Sign Test
+    X <= to_signed(-4, 16);
+    Y <= to_signed(1, 8);
+    CONTROL <= ASR_OP;
+    wait for 1 us;
+    assert OUTPUT = -2 report "Incorrect ASR_OP calculation" severity error;
+
     ------------------------------------ Shift : ROTL ------------------------------------- 
     X <= to_signed(64, 16);
     Y <= to_signed(1, 8);
@@ -549,12 +759,40 @@ begin
     wait for 1 us;
     assert OUTPUT = 128 report "Incorrect ROTL calculation" severity error;
 
+    -- Zero Test
+    X <= to_signed(0, 16);
+    Y <= to_signed(0, 8);
+    CONTROL <= ROL_OP;
+    wait for 1 us;
+    assert OUTPUT = 0 report "Incorrect ROL_OP calculation" severity error;
+
+    -- Negative Test and Sign Test
+    X <= to_signed(-4, 16);
+    Y <= to_signed(1, 8);
+    CONTROL <= ROL_OP;
+    wait for 1 us;
+    assert OUTPUT = -8 report "Incorrect ROL_OP calculation" severity error;
+
     ------------------------------------ Shift : ROTR ------------------------------------- 
     X <= to_signed(64, 16);
     Y <= to_signed(1, 8);
     CONTROL <= ROR_OP;
     wait for 1 us;
     assert OUTPUT = 32 report "Incorrect ROTR calculation" severity error;
+
+    -- Zero Test
+    X <= to_signed(0, 16);
+    Y <= to_signed(0, 8);
+    CONTROL <= ROR_OP;
+    wait for 1 us;
+    assert OUTPUT = 0 report "Incorrect ROR_OP calculation" severity error;
+
+    -- Negative Test and Sign Test
+    X <= to_signed(-4, 16);
+    Y <= to_signed(1, 8);
+    CONTROL <= ROR_OP;
+    wait for 1 us;
+    assert OUTPUT = -4 report "Incorrect ROR_OP calculation" severity error;
 
 
 end process;
