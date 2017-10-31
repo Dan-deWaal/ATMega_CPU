@@ -284,9 +284,8 @@ begin
 								when "001" =>
 									case instruction(11 downto 10) is
 										when "00" => 												--11. CPSE : Compare, skip if Equal
-											if d5 = r5 then
-												pc_inc := 2;
-											end if;
+											opcode <= 11;
+											state <= EXECUTE2;
 											
 										when "01" => 												--12. CP   : Compare
 											opcode <= 8;
@@ -792,7 +791,12 @@ begin
 
 							state <= EXECUTE1;
 						--------------------------
-
+						when 11 =>
+							if reg(to_integer(unsigned(d5))) /= reg(to_integer(unsigned(r5))) then
+								pc_inc := 0;
+							end if;
+							state <= EXECUTE1;
+						
 						when 28 => 																	--28. LDS : Load Direct from data space 16-bit		
  							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);				-- where in data memory to read from 				
  							pc_inc := 0;
