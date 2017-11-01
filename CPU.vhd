@@ -648,7 +648,7 @@ begin
 														when "111" => 								--64. CALL : Call Subroutine
 															s_wr <= '1';
 															s_addr <= stack_p;
-															s_dw <= ZEROS(15 downto PROGMEM_SIZE) & std_logic_vector( unsigned(pc) + 2);
+															s_dw <= ZEROS(15 downto PROGMEM_SIZE) & std_logic_vector( unsigned(pc) + 1);
 															stack_p <= std_logic_vector( unsigned(stack_p) + 1 );
 															opcode <= 64;
 															pc_inc := 0;
@@ -822,7 +822,8 @@ begin
  							state <= EXECUTE1;
  
 						when 59 => 																	--59. RET  : Subroutine Return
-							pc <= s_dr(PROGMEM_SIZE-1 downto 0);
+							--pc <= s_dr(PROGMEM_SIZE-1 downto 0);
+							pc_inc := to_integer(unsigned(s_dr(PROGMEM_SIZE-1 downto 0)) - unsigned(pc));
 							stack_p <= std_logic_vector(unsigned(stack_p)-1);
 							state <= EXECUTE1;
 						
