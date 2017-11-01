@@ -18,12 +18,17 @@ package body prog_init is
 		begin
 		
 			-- *** PROG START HERE ***
-         res(0) := "1110000000001010";
-         res(1) := "1111111100000010";
-         res(2) := "1110000000010001";
-         res(3) := "1110000000100001";
+         res(0) := "1110000100000010";
+         res(1) := "1110000000010101";
+         res(2) := "1001010000001110";
+         res(3) := "0000000000000101";
+         res(4) := "1110000000100011";
+         res(5) := "1001010000001100";
+         res(6) := "0000000000000000";
+         res(7) := "1110000000111010";
+         res(8) := "1001010100001000";
 
-         for i in 4 to len-1 loop  -- change to 1 more than program length. **********
+         for i in 9 to len-1 loop  -- change to 1 more than program length. **********
             res(i) := (others => '0');
          end loop;
 			-- ***  PROG END HERE  ***

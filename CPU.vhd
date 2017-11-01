@@ -735,19 +735,23 @@ begin
 								when "111" =>
 									case instruction(11 downto 10) is
 										when "00" => 												--77. BRBS : Branch if Status Flag Set
+											opcode <= 80;
 											if status(to_integer(unsigned(bnum))) = '1' then
 												pc_inc := to_integer(signed(imm7)) + 1;
+												state <= EXECUTE2;
 											end if;
 											
 										when "01" => 												--78. BRBC : Branch if Status Flag Cleared
+											opcode <= 80;
 											if status(to_integer(unsigned(bnum))) = '0' then
 												pc_inc := to_integer(signed(imm7)) + 1;
+												state <= EXECUTE2;
 											end if;
 											
 										when "11" =>
 											case instruction(9) is
 												when '0' => 										--79. SBRC : Skip if Bit in Register Cleared
-													opcode <= 79;
+													opcode <= 80;
 													if reg(to_integer(unsigned(d5)))(to_integer(unsigned(bnum))) = '0' then
 														state <= EXECUTE2;
 													end if;
@@ -803,7 +807,7 @@ begin
 							state <= EXECUTE1;
 						
 						when 28 => 																	--28. LDS : Load Direct from data space 16-bit		
- 							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);				-- where in data memory to read from 				
+ 							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);	-- where in data memory to read from 				
  							pc_inc := 0;
 							state <= EXECUTE3;
 						
@@ -825,19 +829,15 @@ begin
 						
 						when 63 =>  																--63. JMP  : Jump
 							--immediate address is loaded from prog_mem on this clock cycle.
-							--pc <= instruction(PROGMEM_SIZE-1 downto 0);
 							pc_inc := to_integer(unsigned(instruction(PROGMEM_SIZE-1 downto 0)) - unsigned(pc));
 							state <= EXECUTE1;
 						
 						when 64 =>  																--64. CALL : Call Subroutine
-							--pc <= p_dr(PROGMEM_SIZE-1 downto 0);
+							--immediate address is loaded from prog_mem on this clock cycle.
 							pc_inc := to_integer(unsigned(instruction(PROGMEM_SIZE-1 downto 0)) - unsigned(pc));
 							state <= EXECUTE1;
 						
-						when 79 =>																	--79. SBRC : Skip if Bit in Register Cleared
-							state <= EXECUTE1;
-						
-						when 80 =>																	--80. SBRS : Skip if Bit in Register Set
+						when 80 =>																	--80. Insert hole in pipeline
 							state <= EXECUTE1;
 						
 						when others  => 
