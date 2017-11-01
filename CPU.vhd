@@ -786,18 +786,15 @@ begin
 							reg(to_integer(unsigned(Rd)+1)) <= std_logic_vector(aluResult(15 downto 8));
 							reg(to_integer(unsigned(Rd))) <= std_logic_vector(aluResult(7 downto 0));
 							status <= aluS_out;
-
 							state <= EXECUTE1;
 
 						when 8 =>																	--9. 8-bit ALU compare (registers don't change)
 							status <= aluS_out;
-
 							state <= EXECUTE1;
 
 						when 9 =>																	--10. 8-bit ALU output (others)
 							reg(to_integer(unsigned(Rd))) <= std_logic_vector(aluResult(7 downto 0));
 							status <= aluS_out;
-
 							state <= EXECUTE1;
 						--------------------------
 						when 11 =>																	--11. CPSE : Compare, skip if Equal
