@@ -470,6 +470,7 @@ begin
 															Rd <= d5;
 															opcode <= 36;
 															pc_inc := 0;
+															stack_p <= std_logic_vector(unsigned(stack_p)-1);
 															state <= EXECUTE2;
 															
 														when others => -- NOP
@@ -484,7 +485,7 @@ begin
 														when "1111" => 								--38. PUSH : Push Register on Stack
 															s_wr <= '1';
 															s_addr <= stack_p;
-															s_dw <= ZEROS(15 downto 5) & d5;
+															s_dw <= "00000000" & reg(to_integer(unsigned(d5)));
 															stack_p <= std_logic_vector( unsigned(stack_p) + 1 );
 															
 														when "0100" => 								--39. XCH  : Exchange Z
@@ -663,8 +664,9 @@ begin
 													case instruction(8) is
 														when '0' => 								--65. ADIW : Add Immediate to Word
 															opcode <= 3;
-															aluX <= signed(reg(to_integer(unsigned(VRd))+1)) & signed(reg(to_integer(unsigned(VRd))));
-															aluY <= resize(signed(imm6), 8);
+															aluX(15 downto 8) <= signed(reg(to_integer(unsigned(VRd))+1));
+															aluX(7 downto 0) <= signed(reg(to_integer(unsigned(VRd))));
+															aluY <= "00" & signed(imm6);
 															aluControl <= std_logic_vector(to_unsigned(16, 5));	--ADIW
 															aluS_in <= status;
 															
@@ -675,8 +677,9 @@ begin
 
 														when '1' => 								--66. SBIW : Subtract Immediate from Word
 															opcode <= 3;
-															aluX <= signed(reg(to_integer(unsigned(VRd))+1)) & signed(reg(to_integer(unsigned(VRd))));
-															aluY <= resize(signed(imm6), 8);
+															aluX(15 downto 8) <= signed(reg(to_integer(unsigned(VRd))+1));
+															aluX(7 downto 0) <= signed(reg(to_integer(unsigned(VRd))));
+															aluY <= "00" & signed(imm6);
 															aluControl <= std_logic_vector(to_unsigned(17, 5));	--SBIW
 															aluS_in <= status;
 															
@@ -798,9 +801,8 @@ begin
  							pc_inc := 0;
 							state <= EXECUTE3;
 						
-						when 36 =>
+						when 36 =>																	--36. POP : Pop Register from Stack
 							reg(to_integer(unsigned(Rd))) <= s_dr(7 downto 0);
-							stack_p <= std_logic_vector(unsigned(stack_p)-1);
 							state <= EXECUTE1;
 						
  						when 37 => 																	--37. STS  : Store Direct to Data Space 16-bit		
