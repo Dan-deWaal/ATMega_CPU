@@ -860,7 +860,7 @@ begin
 			end case;
 			--move program counter every clock cycle.
 			if (pc_inc < 0) then
-				pc <= std_logic_vector( unsigned(pc) - pc_inc );
+				pc <= std_logic_vector( unsigned(pc) - pc_inc - 1);
 			else
 				pc <= std_logic_vector( unsigned(pc) + pc_inc );
 			end if;
