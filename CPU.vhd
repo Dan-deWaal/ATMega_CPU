@@ -747,13 +747,18 @@ begin
 										when "11" =>
 											case instruction(9) is
 												when '0' => 										--79. SBRC : Skip if Bit in Register Cleared
-													if reg(to_integer(unsigned(r5)))(to_integer(unsigned(bnum))) = '0' then
-														pc_inc := 1;
+													opcode <= 79;
+													if reg(to_integer(unsigned(d5)))(to_integer(unsigned(bnum))) = '0' then
+														state <= EXECUTE2;
 													end if;
 													
 												when '1' => 										--80. SBRS : Skip if Bit in Register Set
-													if reg(to_integer(unsigned(r5)))(to_integer(unsigned(bnum))) = '1' then
-														pc_inc := 1;
+													opcode <= 80;
+													Rr <= d5;
+													bits <= bnum;
+													--pc_inc := 0;
+													if reg(to_integer(unsigned(d5)))(to_integer(unsigned(bnum))) = '1' then
+														state <= EXECUTE2;
 													end if;
 													
 												when others => -- NOP
@@ -791,7 +796,7 @@ begin
 
 							state <= EXECUTE1;
 						--------------------------
-						when 11 =>
+						when 11 =>																	--11. CPSE : Compare, skip if Equal
 							if reg(to_integer(unsigned(d5))) /= reg(to_integer(unsigned(r5))) then
 								pc_inc := 0;
 							end if;
@@ -827,6 +832,12 @@ begin
 						when 64 =>  																--64. CALL : Call Subroutine
 							--pc <= p_dr(PROGMEM_SIZE-1 downto 0);
 							pc_inc := to_integer(unsigned(instruction(PROGMEM_SIZE-1 downto 0)) - unsigned(pc));
+							state <= EXECUTE1;
+						
+						when 79 =>																	--79. SBRC : Skip if Bit in Register Cleared
+							state <= EXECUTE1;
+						
+						when 80 =>																	--80. SBRS : Skip if Bit in Register Set
 							state <= EXECUTE1;
 						
 						when others  => 
