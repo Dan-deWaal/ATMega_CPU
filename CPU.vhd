@@ -284,9 +284,8 @@ begin
 								when "001" =>
 									case instruction(11 downto 10) is
 										when "00" => 												--11. CPSE : Compare, skip if Equal
-											if d5 = r5 then
-												pc_inc := 2;
-											end if;
+											opcode <= 11;
+											state <= EXECUTE2;
 											
 										when "01" => 												--12. CP   : Compare
 											opcode <= 8;
@@ -358,7 +357,7 @@ begin
 											pc_inc := 0;
 											state <= EXECUTE2;
 										when "11" => 												--18. MOV  : Copy Register
-											reg(to_integer(unsigned(Rd))) <= reg(to_integer(unsigned(Rr)));
+											reg(to_integer(unsigned(d5))) <= reg(to_integer(unsigned(r5)));
 											
 										when others => -- NOP
 											NULL;
@@ -597,7 +596,7 @@ begin
 																	
 																when "01" => 						--58. BCLR : Flag Clear
 																	bnum := instruction(6 downto 4);
-																	status(to_integer(unsigned(bnum))) <= '1'; 
+																	status(to_integer(unsigned(bnum))) <= '0'; 
 																	
 																when "10" => 						--59. RET  : Subroutine Return
 																	s_addr <= stack_p;
@@ -739,25 +738,34 @@ begin
 								when "111" =>
 									case instruction(11 downto 10) is
 										when "00" => 												--77. BRBS : Branch if Status Flag Set
+											opcode <= 80;
 											if status(to_integer(unsigned(bnum))) = '1' then
 												pc_inc := to_integer(signed(imm7)) + 1;
+												state <= EXECUTE2;
 											end if;
 											
 										when "01" => 												--78. BRBC : Branch if Status Flag Cleared
+											opcode <= 80;
 											if status(to_integer(unsigned(bnum))) = '0' then
 												pc_inc := to_integer(signed(imm7)) + 1;
+												state <= EXECUTE2;
 											end if;
 											
 										when "11" =>
 											case instruction(9) is
 												when '0' => 										--79. SBRC : Skip if Bit in Register Cleared
-													if reg(to_integer(unsigned(r5)))(to_integer(unsigned(bnum))) = '0' then
-														pc_inc := 1;
+													opcode <= 80;
+													if reg(to_integer(unsigned(d5)))(to_integer(unsigned(bnum))) = '0' then
+														state <= EXECUTE2;
 													end if;
 													
 												when '1' => 										--80. SBRS : Skip if Bit in Register Set
-													if reg(to_integer(unsigned(r5)))(to_integer(unsigned(bnum))) = '1' then
-														pc_inc := 1;
+													opcode <= 80;
+													Rr <= d5;
+													bits <= bnum;
+													--pc_inc := 0;
+													if reg(to_integer(unsigned(d5)))(to_integer(unsigned(bnum))) = '1' then
+														state <= EXECUTE2;
 													end if;
 													
 												when others => -- NOP
@@ -781,23 +789,25 @@ begin
 							reg(to_integer(unsigned(Rd)+1)) <= std_logic_vector(aluResult(15 downto 8));
 							reg(to_integer(unsigned(Rd))) <= std_logic_vector(aluResult(7 downto 0));
 							status <= aluS_out;
-
 							state <= EXECUTE1;
 
 						when 8 =>																	--9. 8-bit ALU compare (registers don't change)
 							status <= aluS_out;
-
 							state <= EXECUTE1;
 
 						when 9 =>																	--10. 8-bit ALU output (others)
 							reg(to_integer(unsigned(Rd))) <= std_logic_vector(aluResult(7 downto 0));
 							status <= aluS_out;
-
 							state <= EXECUTE1;
 						--------------------------
-
+						when 11 =>																	--11. CPSE : Compare, skip if Equal
+							if reg(to_integer(unsigned(d5))) /= reg(to_integer(unsigned(r5))) then
+								pc_inc := 0;
+							end if;
+							state <= EXECUTE1;
+						
 						when 28 => 																	--28. LDS : Load Direct from data space 16-bit		
- 							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);				-- where in data memory to read from 				
+ 							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);	-- where in data memory to read from 				
  							pc_inc := 0;
 							state <= EXECUTE3;
 						
@@ -818,13 +828,15 @@ begin
 						
 						when 63 =>  																--63. JMP  : Jump
 							--immediate address is loaded from prog_mem on this clock cycle.
-							--pc <= instruction(PROGMEM_SIZE-1 downto 0);
 							pc_inc := to_integer(unsigned(instruction(PROGMEM_SIZE-1 downto 0)) - unsigned(pc));
 							state <= EXECUTE1;
 						
 						when 64 =>  																--64. CALL : Call Subroutine
-							--pc <= p_dr(PROGMEM_SIZE-1 downto 0);
+							--immediate address is loaded from prog_mem on this clock cycle.
 							pc_inc := to_integer(unsigned(instruction(PROGMEM_SIZE-1 downto 0)) - unsigned(pc));
+							state <= EXECUTE1;
+						
+						when 80 =>																	--80. Insert hole in pipeline
 							state <= EXECUTE1;
 						
 						when others  => 
@@ -847,7 +859,7 @@ begin
 			end case;
 			--move program counter every clock cycle.
 			if (pc_inc < 0) then
-				pc <= std_logic_vector( unsigned(pc) - pc_inc );
+				pc <= std_logic_vector( unsigned(pc) - pc_inc - 1);
 			else
 				pc <= std_logic_vector( unsigned(pc) + pc_inc );
 			end if;
