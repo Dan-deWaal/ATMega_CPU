@@ -79,7 +79,6 @@ architecture ATMEGA_CPU of CPU is
 	shared variable bnum    : std_logic_vector(2 downto 0);
 	
 	shared variable immV		: integer range -4096 to 4096;
-	shared variable pcV		: integer range 0 to 65535;
 
 begin
 
@@ -726,13 +725,14 @@ begin
 									state <= EXECUTE2;
 									
 								when "101" => 														--75. RCALL : Relative Call Subroutine
+									s_wr <= '1';
 									s_addr <= stack_p;
-									s_dw <= ZEROS(15 downto PROGMEM_SIZE) & std_logic_vector( unsigned(pc) + 1);
+									s_dw <= ZEROS(15 downto PROGMEM_SIZE) & std_logic_vector(unsigned(pc));
 									stack_p <= std_logic_vector( unsigned(stack_p) + 1 );
-									--pc <= std_logic_vector( unsigned(pc) + signed(imm12) );
-									immV := to_integer(unsigned(imm12));
-									pcV  := to_integer(unsigned(pc)) + immV;
-									pc   <= std_logic_vector(to_unsigned(pcV, PROGMEM_SIZE));
+									immV := to_integer(signed(imm12));
+									pc_inc := immV;
+									opcode <= 80;
+									state <= EXECUTE2;
 									
 								when "110" => 														--76. LDI   : Load Immediate
 									VRd := '1' & d4;
