@@ -38,7 +38,6 @@ architecture ATMEGA_CPU of CPU is
 	signal reg			: register_t;
 	signal Rd			: std_logic_vector(4 downto 0);
 	signal Rr			: std_logic_vector(4 downto 0);
-	signal offset		: std_logic_vector(7 downto 0);
 	signal imm			: std_logic_vector(15 downto 0);
 	signal pre_dec		: std_logic;
 	signal post_dec	: std_logic;
@@ -60,7 +59,7 @@ architecture ATMEGA_CPU of CPU is
 	alias pc 				: std_logic_vector(PROGMEM_SIZE-1 downto 0) 	is p_addr;
 	alias instruction 	: std_logic_vector(15 downto 0) 					is p_dr;
 	
-	shared variable pc_inc  : integer range -32768 to 32767;
+	shared variable pc_inc  : integer range -4096 to 4096;
 	
 	shared variable VRd		: std_logic_vector(4 downto 0);
 	shared variable VRr		: std_logic_vector(4 downto 0);
@@ -79,7 +78,7 @@ architecture ATMEGA_CPU of CPU is
 	shared variable i4		: std_logic_vector(3 downto 0);
 	shared variable bnum    : std_logic_vector(2 downto 0);
 	
-	shared variable immV		: integer range -32768 to 32767;
+	shared variable immV		: integer range -4096 to 4096;
 	shared variable pcV		: integer range 0 to 65535;
 
 begin
@@ -539,6 +538,7 @@ begin
 															state <= EXECUTE2;
 
 														when "0010" => 								--52. SWAP : Swap Nibbles 
+															NULL;	--not implemented
 															
 														when "0011" => 								--53. INC  : Increment
 															opcode <= 9;
@@ -709,18 +709,21 @@ begin
 								when "010" =>
 									case instruction(11) is
 										when '0' => 												--68. LDS : Load Direct from data space 7-bit
-											NULL;
+											NULL; --not implemented
 										when '1' => 												--69. STS : Store Direct to Data Space 7-bit
-											NULL;
+											NULL; --not implemented
 										when others => -- NOP
 											NULL;
 									end case;
 								when "100" => 														--74. RJMP  : Relative Jump 
-									--pc <= std_logic_vector( unsigned(to_integer(unsigned(pc)) + to_integer(signed(imm12))) ); 
-									--pc <= std_logic_vector( unsigned(pc)+signed(imm12) );
-									immV := to_integer(unsigned(imm12));
-									pcV  := to_integer(unsigned(pc)) + immV;
-									pc   <= std_logic_vector(to_unsigned(pcV, PROGMEM_SIZE));
+									immV := to_integer(signed(imm12));
+									if (immV > 0) then
+										pc_inc := immV;
+									else
+										pc_inc := immV+1;
+									end if;
+									opcode <= 80;
+									state <= EXECUTE2;
 									
 								when "101" => 														--75. RCALL : Relative Call Subroutine
 									s_addr <= stack_p;
@@ -836,7 +839,7 @@ begin
 							--immediate address is loaded from prog_mem on this clock cycle.
 							pc_inc := to_integer(unsigned(instruction(PROGMEM_SIZE-1 downto 0)) - unsigned(pc));
 							state <= EXECUTE1;
-						
+							
 						when 80 =>																	--80. Insert hole in pipeline
 							state <= EXECUTE1;
 						
