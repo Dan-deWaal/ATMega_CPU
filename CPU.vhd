@@ -74,6 +74,8 @@ architecture ATMEGA_CPU of CPU is
 	shared variable imm8		: std_logic_vector(7 downto 0);
 	shared variable imm7		: std_logic_vector(6 downto 0);
 	shared variable imm6		: std_logic_vector(5 downto 0);
+	
+	shared variable tempRg  : unsigned(15 downto 0);
 
 	shared variable i2		: std_logic_vector(1 downto 0);
 	shared variable i4		: std_logic_vector(3 downto 0);
@@ -81,7 +83,6 @@ architecture ATMEGA_CPU of CPU is
 	
 	shared variable immV		: integer range -32768 to 32767;
 	shared variable pcV		: integer range 0 to 65535;
-
 begin
 
 	-- Program memory: 4 K (words), 16-bit wide, read-only
@@ -429,12 +430,35 @@ begin
 									i2 := instruction(9) & instruction(3);
 									case i2 is
 										when "10" => 												--24. ST  : Store Indirect Z
+											d_addr(15 downto 8) <= reg(31); -- 31:30 is Z
+											d_addr(7 downto 0) <= reg(30);
+											
+											d_dw <= reg(to_integer(unsigned(d5)));
+											d_wr <= '1';
 											
 										when "11" => 												--25. ST  : Store Indirect Y
+											d_addr(15 downto 8) <= reg(29); -- 29:28 is Y
+											d_addr(7 downto 0) <= reg(28);
 											
-										when "00" => 												--26. LD  : Load Indirect Y
+											d_dw <= reg(to_integer(unsigned(d5)));
+											d_wr <= '1';
+										when "00" => 												--26. LD  : Load Indirect Z
+											opcode <= 26;
+											d_addr(15 downto 8) <= reg(31);
+											d_addr(7 downto 0) <= reg(30);
 											
-										when "01" => 												--27. LD  : Load Indirect Z
+											Rd <= d5;
+											pc_inc := 0;
+											state <= EXECUTE2;										
+										
+										when "01" => 												--27. LD  : Load Indirect Y
+											opcode <= 26;
+											d_addr(15 downto 8) <= reg(29);
+											d_addr(7 downto 0) <= reg(28);
+											
+											Rd <= d5;
+											pc_inc := 0;
+											state <= EXECUTE2;
 											
 										when others => -- NOP
 											NULL;
@@ -451,18 +475,76 @@ begin
 															Rd <= d5;
 															state <= EXECUTE2;
 														when "1100" => 								--29. LD  : Load Indirect X
+															opcode <= 26;
+															d_addr(15 downto 8) <= reg(27);
+															d_addr(7 downto 0) <= reg(26);
+															
+															Rd <= d5;
+															pc_inc := 0;
+															state <= EXECUTE2;
 															
 														when "0010" => 								--30. LD  : Load Indirect Z and Pre Decrement
+															opcode <= 26;
+															tempRg := (unsigned(reg(31)) & unsigned(reg(30))) - 1;
+															d_addr <= std_logic_vector(tempRg);
 															
+															reg(31) <= std_logic_vector(tempRg(15 downto 8));
+															reg(30) <= std_logic_vector(tempRg(7 downto 0));
+															
+															Rd <= d5;
+															pc_inc := 0;
+															state <= EXECUTE2;										
+										
 														when "1010" => 								--31. LD  : Load Indirect Y and Pre Decrement
+															opcode <= 26;
+															tempRg := (unsigned(reg(29)) & unsigned(reg(28))) - 1;
+															d_addr <= std_logic_vector(tempRg);
 															
+															reg(29) <= std_logic_vector(tempRg(15 downto 8));
+															reg(28) <= std_logic_vector(tempRg(7 downto 0));
+															
+															Rd <= d5;
+															pc_inc := 0;
+															state <= EXECUTE2;										
+										
 														when "1110" => 								--32. LD  : Load Indirect X and Pre Decrement
+															opcode <= 26;
+															tempRg := (unsigned(reg(27)) & unsigned(reg(26))) - 1;
+															d_addr <= std_logic_vector(tempRg);
 															
+															reg(27) <= std_logic_vector(tempRg(15 downto 8));
+															reg(26) <= std_logic_vector(tempRg(7 downto 0));
+															
+															Rd <= d5;
+															pc_inc := 0;
+															state <= EXECUTE2;										
+										
 														when "0001" => 								--33. LD  : Load Indirect Z and Post Increment
+															opcode <= 33;
+															d_addr(15 downto 8) <= reg(31);
+															d_addr(7 downto 0) <= reg(30);
+															
+															Rd <= d5;
+															pc_inc := 0;
+															state <= EXECUTE2;
 															
 														when "1001" => 								--34. LD  : Load Indirect Y and Post Increment
+															opcode <= 34;
+															d_addr(15 downto 8) <= reg(29);
+															d_addr(7 downto 0) <= reg(28);
+															
+															Rd <= d5;
+															pc_inc := 0;
+															state <= EXECUTE2;
 															
 														when "1101" => 								--35. LD  : Load Indirect X and Post Increment
+															opcode <= 35;
+															d_addr(15 downto 8) <= reg(27);
+															d_addr(7 downto 0) <= reg(26);
+															
+															Rd <= d5;
+															pc_inc := 0;
+															state <= EXECUTE2;
 															
 														when "1111" => 								--36. POP : Pop Register from Stack
 															s_addr <= stack_p;
@@ -490,22 +572,70 @@ begin
 														when "0100" => 								--39. XCH  : Exchange Z
 															
 														when "1100" => 								--40. ST   : Store Indirect X
+															d_addr(15 downto 8) <= reg(27); -- 27:26 is X
+															d_addr(7 downto 0) <= reg(26);
+															
+															d_dw <= reg(to_integer(unsigned(d5)));
+															d_wr <= '1';
 															
 														when "0010" => 								--41. ST   : Store Indirect Z and Pre Decrement
+															tempRg := (unsigned(reg(31)) & unsigned(reg(30))) - 1;
+															d_addr <= std_logic_vector(tempRg);
+															d_dw <= reg(to_integer(unsigned(d5)));
+															d_wr <= '1';
+															
+															reg(31) <= std_logic_vector(tempRg(15 downto 8));
+															reg(30) <= std_logic_vector(tempRg(7 downto 0));
 															
 														when "1010" => 								--42. ST   : Store Indirect Y and Pre Decrement
+															tempRg := (unsigned(reg(29)) & unsigned(reg(29))) - 1;
+															d_addr <= std_logic_vector(tempRg);
+															d_dw <= reg(to_integer(unsigned(d5)));
+															d_wr <= '1';
+															
+															reg(29) <= std_logic_vector(tempRg(15 downto 8));
+															reg(28) <= std_logic_vector(tempRg(7 downto 0));
 															
 														when "0110" => 								--43. LAC  : Load and Clear Z
 															
 														when "1110" => 								--44. ST   : Store Indirect X and Pre Decrement
+															tempRg := (unsigned(reg(27)) & unsigned(reg(26))) - 1;
+															d_addr <= std_logic_vector(tempRg);
+															d_dw <= reg(to_integer(unsigned(d5)));
+															d_wr <= '1';
 															
-														when "0001" => 								--45. ST   : Store Indirect Z and Post Decrement
+															reg(27) <= std_logic_vector(tempRg(15 downto 8));
+															reg(26) <= std_logic_vector(tempRg(7 downto 0));
 															
-														when "1001" => 								--46. ST   : Store Indirect Y and Post Decrement
+														when "0001" => 								--45. ST   : Store Indirect Z and Post Increment
+															opcode <= 45;
+															d_addr(15 downto 8) <= reg(31);
+															d_addr(7 downto 0) <= reg(30);
+															d_dw <= reg(to_integer(unsigned(d5)));
+															d_wr <= '1';
 															
+															pc_inc := 0;
+															state <= EXECUTE2;
+														when "1001" => 								--46. ST   : Store Indirect Y and Post Increment
+															opcode <= 46;
+															d_addr(15 downto 8) <= reg(29);
+															d_addr(7 downto 0) <= reg(28);
+															d_dw <= reg(to_integer(unsigned(d5)));
+															d_wr <= '1';
+															
+															pc_inc := 0;
+															state <= EXECUTE2;
 														when "0101" => 								--47. LAS  : Load and Set Z
 															
-														when "1101" => 								--48. ST   : Store Indirect X and Post Decrement
+														when "1101" => 								--48. ST   : Store Indirect X and Post Increment
+															opcode <= 48;
+															d_addr(15 downto 8) <= reg(27);
+															d_addr(7 downto 0) <= reg(26);
+															d_dw <= reg(to_integer(unsigned(d5)));
+															d_wr <= '1';
+															
+															pc_inc := 0;
+															state <= EXECUTE2;
 															
 														when "0111" => 								--49. LAT  : Load and Toggle Z
 															
@@ -623,7 +753,7 @@ begin
 																when others => -- NOP
 																	NULL;
 															end case;
-														when "1010" => 								--62. DEC  : Decrement
+														when "1010" => 							--62. DEC  : Decrement
 															opcode <= 9;
 															aluX <= "00000000" & signed(reg(to_integer(unsigned(d5))));
 															aluY <= "--------";
@@ -707,11 +837,20 @@ begin
 											NULL;
 									end case;
 								when "010" =>
+									imm8 := not instruction(8) & instruction(8) & instruction(10 downto 9) & instruction(3 downto 0);
+									
 									case instruction(11) is
 										when '0' => 												--68. LDS : Load Direct from data space 7-bit
-											NULL;
+											opcode <= 68;
+											d_addr <= "00000000" & imm8;										-- where in data memory to read from 				
+											pc_inc := 0;
+											state <= EXECUTE2;
+											
 										when '1' => 												--69. STS : Store Direct to Data Space 7-bit
-											NULL;
+				 							d_addr <= "00000000" & imm8;
+											d_dw <= reg(to_integer(unsigned(d4)) + 16);			
+ 											d_wr <= '1';
+											
 										when others => -- NOP
 											NULL;
 									end case;
@@ -806,11 +945,43 @@ begin
 							end if;
 							state <= EXECUTE1;
 						
+						when 26 =>																	--26. LD  : Load Indirect Z
+							opcode <= 28;
+							pc_inc := 0;
+							state <= EXECUTE3;
+						
 						when 28 => 																	--28. LDS : Load Direct from data space 16-bit		
  							d_addr <= instruction(DATAMEM_SIZE-1 downto 0);	-- where in data memory to read from 				
  							pc_inc := 0;
 							state <= EXECUTE3;
-						
+							
+						when 33 => 																	--33. LD  : Load Indirect Z and Post Increment
+							tempRg := (unsigned(reg(31)) & unsigned(reg(30))) + 1;
+							reg(31) <= std_logic_vector(tempRg(15 downto 8));
+							reg(30) <= std_logic_vector(tempRg(7 downto 0));
+							
+							opcode <= 28;
+							pc_inc := 0;
+							state <= EXECUTE3;
+							
+						when 34 => 																	--33. LD  : Load Indirect Y and Post Increment
+							tempRg := (unsigned(reg(29)) & unsigned(reg(28))) + 1;
+							reg(29) <= std_logic_vector(tempRg(15 downto 8));
+							reg(28) <= std_logic_vector(tempRg(7 downto 0));
+							
+							opcode <= 28;
+							pc_inc := 0;
+							state <= EXECUTE3;
+							
+						when 35 => 																	--33. LD  : Load Indirect X and Post Increment
+							tempRg := (unsigned(reg(27)) & unsigned(reg(26))) + 1;
+							reg(27) <= std_logic_vector(tempRg(15 downto 8));
+							reg(26) <= std_logic_vector(tempRg(7 downto 0));
+							
+							opcode <= 28;
+							pc_inc := 0;
+							state <= EXECUTE3;
+							
 						when 36 =>																	--36. POP : Pop Register from Stack
 							reg(to_integer(unsigned(Rd))) <= s_dr(7 downto 0);
 							state <= EXECUTE1;
@@ -820,7 +991,25 @@ begin
 							d_dw <= reg(to_integer(unsigned(Rd)));			
  							d_wr <= '1';			
  							state <= EXECUTE1;
- 
+							
+						when 45 =>																	--45. ST   : Store Indirect Z and Post Increment
+							tempRg := (unsigned(reg(31)) & unsigned(reg(30))) + 1;
+							reg(31) <= std_logic_vector(tempRg(15 downto 8));
+							reg(30) <= std_logic_vector(tempRg(7 downto 0));
+							state <= EXECUTE1;
+							
+						when 46 =>																	--46. ST   : Store Indirect Y and Post Increment
+							tempRg := (unsigned(reg(29)) & unsigned(reg(28))) + 1;
+							reg(29) <= std_logic_vector(tempRg(15 downto 8));
+							reg(28) <= std_logic_vector(tempRg(7 downto 0));
+							state <= EXECUTE1;
+						
+						when 48 =>																	--48. ST   : Store Indirect X and Post Increment
+							tempRg := (unsigned(reg(27)) & unsigned(reg(26))) + 1;
+							reg(27) <= std_logic_vector(tempRg(15 downto 8));
+							reg(26) <= std_logic_vector(tempRg(7 downto 0));
+							state <= EXECUTE1;
+						
 						when 59 => 																	--59. RET  : Subroutine Return
 							--pc <= s_dr(PROGMEM_SIZE-1 downto 0);
 							pc_inc := to_integer(unsigned(s_dr(PROGMEM_SIZE-1 downto 0)) - unsigned(pc));
@@ -836,7 +1025,9 @@ begin
 							--immediate address is loaded from prog_mem on this clock cycle.
 							pc_inc := to_integer(unsigned(instruction(PROGMEM_SIZE-1 downto 0)) - unsigned(pc));
 							state <= EXECUTE1;
-						
+						when 68 =>																	--68. LDS : Load Direct from data space 16-bit
+ 							reg(to_integer(unsigned(Rd))) <= d_dr;
+ 							state <= EXECUTE1;
 						when 80 =>																	--80. Insert hole in pipeline
 							state <= EXECUTE1;
 						
